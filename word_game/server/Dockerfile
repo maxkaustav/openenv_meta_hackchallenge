@@ -1,45 +1,47 @@
+# syntax=docker/dockerfile:1
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
+#
+# IMPORTANT: Docker build context must be the word_game/ project ROOT (one level above server/):
+#   docker build -f server/Dockerfile -t word_game-env:latest .
+# This ensures pyproject.toml, uv.lock, models.py, and the full package are available.
+#
+# For Hugging Face Spaces: openenv push uploads this file to the Space repo root.
+# HF Spaces runs containers as user 1000 (non-root) so ownership is set accordingly.
 
-# Multi-stage build using openenv-base
-# This Dockerfile is flexible and works for both:
-# - In-repo environments (with local OpenEnv sources)
-# - Standalone environments (with openenv from PyPI/Git)
-# The build script (openenv build) handles context detection and sets appropriate build args.
-
-ARG BASE_IMAGE=ghcr.io/meta-pytorch/openenv-base:latest
+# Allow overriding the base image via openenv push --base-image ...
+# Default: standard Python slim so HF Spaces can always pull it without auth.
+ARG BASE_IMAGE=python:3.11-slim
 FROM ${BASE_IMAGE} AS builder
 
 WORKDIR /app
 
-# Ensure git is available (required for installing dependencies from VCS)
+# System dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git && \
+    apt-get install -y --no-install-recommends git curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Build argument to control whether we're building standalone or in-repo
-ARG BUILD_MODE=in-repo
+ARG BUILD_MODE=standalone
 ARG ENV_NAME=word_game
 
-# Copy environment code (always at root of build context)
+# Copy the full word_game project root into /app/env.
+# Build context = word_game/ directory (contains pyproject.toml, uv.lock, models.py, server/).
 COPY . /app/env
 
-# For in-repo builds, openenv is already vendored in the build context
-# For standalone builds, openenv will be installed via pyproject.toml
+# Work from the project root where pyproject.toml and uv.lock live.
 WORKDIR /app/env
 
-# Ensure uv is available (for local builds where base image lacks it)
-RUN if ! command -v uv >/dev/null 2>&1; then \
+# Ensure uv is available.
+RUN if ! command -v uv > /dev/null 2>&1; then \
         curl -LsSf https://astral.sh/uv/install.sh | sh && \
         mv /root/.local/bin/uv /usr/local/bin/uv && \
         mv /root/.local/bin/uvx /usr/local/bin/uvx; \
     fi
-    
-# Install dependencies using uv sync
-# If uv.lock exists, use it; otherwise resolve on the fly
+
+# Install dependencies only (not the project) -- cached separately for faster rebuilds.
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ -f uv.lock ]; then \
         uv sync --frozen --no-install-project --no-editable; \
@@ -47,6 +49,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --no-install-project --no-editable; \
     fi
 
+# Install the project itself into the venv.
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ -f uv.lock ]; then \
         uv sync --frozen --no-editable; \
@@ -54,27 +57,37 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --no-editable; \
     fi
 
-# Final runtime stage
+# -- Runtime stage -----------------------------------------------------------
 FROM ${BASE_IMAGE}
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy the virtual environment from builder
+# Copy the virtual environment and package from builder.
 COPY --from=builder /app/env/.venv /app/.venv
+COPY --from=builder /app/env       /app/env
 
-# Copy the environment code
-COPY --from=builder /app/env /app/env
+# HF Spaces runs as user 1000 (non-root) -- ensure files are readable.
+RUN chown -R 1000:1000 /app
 
-# Set PATH to use the virtual environment
+# Activate the venv.
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Set PYTHONPATH so imports work correctly
-ENV PYTHONPATH="/app/env:$PYTHONPATH"
+# /app/env IS the word_game package root (pyproject.toml: package-dir = {"word_game" = "."}).
+# PYTHONPATH must include /app (the parent) so `import word_game` resolves correctly.
+ENV PYTHONPATH="/app:$PYTHONPATH"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Declare the port the server listens on (matches README.md app_port: 8000).
+EXPOSE 8000
+
+# Health check.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the FastAPI server
-# The module path is constructed to work with the /app/env structure
-CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 8000"]
+# Run uvicorn using the fully-qualified installed module path.
+# Format required by uvicorn: module_path:asgi_app_object
+# word_game.server.app:app matches pyproject.toml package layout.
+CMD ["uvicorn", "word_game.server.app:app", "--host", "0.0.0.0", "--port", "8000", "--app-dir", "/app"]
