@@ -19,7 +19,7 @@ FROM ${BASE_IMAGE} AS builder
 
 WORKDIR /app
 
-# ── System dependencies ────────────────────────────────────────────────────
+# -- System dependencies ----------------------------------------------------
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl && \
     rm -rf /var/lib/apt/lists/*
@@ -31,14 +31,14 @@ ARG ENV_NAME=healthcare_scheduling
 COPY . /app/env
 WORKDIR /app/env
 
-# ── Ensure uv is available ─────────────────────────────────────────────────
+# -- Ensure uv is available -------------------------------------------------
 RUN if ! command -v uv > /dev/null 2>&1; then \
         curl -LsSf https://astral.sh/uv/install.sh | sh && \
         mv /root/.local/bin/uv /usr/local/bin/uv && \
         mv /root/.local/bin/uvx /usr/local/bin/uvx; \
     fi
 
-# ── Install dependencies (cached layer) ────────────────────────────────────
+# -- Install dependencies (cached layer) ------------------------------------
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ -f uv.lock ]; then \
         uv sync --frozen --no-install-project --no-editable; \
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --no-install-project --no-editable; \
     fi
 
-# ── Install the project itself ─────────────────────────────────────────────
+# -- Install the project itself ---------------------------------------------
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ -f uv.lock ]; then \
         uv sync --frozen --no-editable; \
@@ -54,7 +54,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --no-editable; \
     fi
 
-# ── Runtime stage ─────────────────────────────────────────────────────────
+# -- Runtime stage ---------------------------------------------------------
 FROM ${BASE_IMAGE}
 
 RUN apt-get update && \
