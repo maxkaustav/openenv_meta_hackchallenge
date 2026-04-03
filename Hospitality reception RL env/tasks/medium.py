@@ -1,10 +1,10 @@
 """
-MEDIUM Task — Healthcare Appointment Scheduling
+MEDIUM Task  Healthcare Appointment Scheduling
 
 User request: "I have a skin rash for 2 weeks"
 Expected path:
-  get_departments() → get_doctors("Dermatology") → check_availability("Dr. Priya Patel")
-  → book_appointment("Dr. Priya Patel", <any valid slot>)
+  get_departments()  get_doctors("Dermatology")  check_availability("Dr. Priya Patel")
+   book_appointment("Dr. Priya Patel", <any valid slot>)
 
 Ground truth:
   department : Dermatology
@@ -59,8 +59,8 @@ def get_task_config() -> dict:
         "max_steps": 10,
         "expected_min_steps": 4,
         "hints": [
-            "Skin rash → Dermatology",
-            "2-week rash signals a chronic condition → prefer Dr. Priya Patel",
+            "Skin rash  Dermatology",
+            "2-week rash signals a chronic condition  prefer Dr. Priya Patel",
         ],
     }
 

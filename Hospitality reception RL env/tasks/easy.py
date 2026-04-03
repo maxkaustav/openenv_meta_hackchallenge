@@ -1,10 +1,10 @@
 """
-EASY Task — Healthcare Appointment Scheduling
+EASY Task  Healthcare Appointment Scheduling
 
 User request: "I have chest pain"
 Expected path:
-  get_departments() → get_doctors("Cardiology") → check_availability("Dr. Sarah Smith")
-  → book_appointment("Dr. Sarah Smith", <any valid slot>)
+  get_departments()  get_doctors("Cardiology")  check_availability("Dr. Sarah Smith")
+   book_appointment("Dr. Sarah Smith", <any valid slot>)
 
 Ground truth:
   department : Cardiology
@@ -54,7 +54,7 @@ def get_task_config() -> dict:
         "max_steps": 10,
         "expected_min_steps": 4,
         "hints": [
-            "Chest pain → Cardiology",
+            "Chest pain  Cardiology",
             "Dr. Sarah Smith specialises in chest pain",
         ],
     }

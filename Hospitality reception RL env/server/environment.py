@@ -2,9 +2,9 @@
 Core environment implementation for the Healthcare Appointment Scheduling RL environment.
 
 Follows the OpenEnv interface pattern:
-  - reset()        → AppointmentObservation
-  - step(action)   → AppointmentObservation
-  - state property → AppointmentState
+  - reset()         AppointmentObservation
+  - step(action)    AppointmentObservation
+  - state property  AppointmentState
 
 State tracks the full episode: department identified, doctor selected,
 booking outcome, and conversation history for graders.

@@ -2,10 +2,10 @@
 FastAPI application entry-point for the Healthcare Appointment Scheduling environment.
 
 Exposes the standard OpenEnv HTTP endpoints:
-  POST /reset   → start a new episode
-  POST /step    → take an action
-  GET  /state   → read internal episode state
-  GET  /health  → liveness probe
+  POST /reset    start a new episode
+  POST /step     take an action
+  GET  /state    read internal episode state
+  GET  /health   liveness probe
 
 The `create_fastapi_app` factory from openenv-core wires these up automatically.
 """

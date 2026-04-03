@@ -25,7 +25,7 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Tool 1 – get_departments
+# Tool 1  get_departments
 # ---------------------------------------------------------------------------
 
 def get_departments() -> Dict[str, Any]:
@@ -48,7 +48,7 @@ def get_departments() -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Tool 2 – get_doctors
+# Tool 2  get_doctors
 # ---------------------------------------------------------------------------
 
 def get_doctors(department: str) -> Dict[str, Any]:
@@ -100,7 +100,7 @@ def get_doctors(department: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Tool 3 – check_availability
+# Tool 3  check_availability
 # ---------------------------------------------------------------------------
 
 def check_availability(doctor: str) -> Dict[str, Any]:
@@ -141,7 +141,7 @@ def check_availability(doctor: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Tool 4 – book_appointment
+# Tool 4  book_appointment
 # ---------------------------------------------------------------------------
 
 def book_appointment(doctor: str, slot: str) -> Dict[str, Any]:
@@ -199,7 +199,7 @@ def book_appointment(doctor: str, slot: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Tool 5 – ask_user_clarification
+# Tool 5  ask_user_clarification
 # ---------------------------------------------------------------------------
 
 def ask_user_clarification(question: str) -> Dict[str, Any]:

@@ -8,7 +8,7 @@ action (tool name + parameters) using a JSON-mode prompt.  It loops until the
 episode ends or max_steps is reached.
 
 Environment variable required:
-    GROQ_API_KEY   — your Groq API key
+    GROQ_API_KEY    your Groq API key
 
 Usage (standalone):
     python agent/groq_agent.py
@@ -53,19 +53,19 @@ Your task is to help a patient book an appointment with the correct doctor.
 ## Available Tools
 You may call ONLY ONE of these tools per turn:
 1. get_departments()
-   → Returns the list of available medical departments.
+    Returns the list of available medical departments.
 
 2. get_doctors(department: str)
-   → Returns doctors in a department with their specializations.
+    Returns doctors in a department with their specializations.
 
 3. check_availability(doctor: str)
-   → Returns available time slots for a specific doctor.
+    Returns available time slots for a specific doctor.
 
 4. book_appointment(doctor: str, slot: str)
-   → Books an appointment. Use EXACT doctor name and EXACT slot string.
+    Books an appointment. Use EXACT doctor name and EXACT slot string.
 
 5. ask_user_clarification(question: str)
-   → Ask the patient a clarifying question when the symptom is ambiguous.
+    Ask the patient a clarifying question when the symptom is ambiguous.
 
 ## Strategy
 1. If the user request is ambiguous, call ask_user_clarification FIRST.
@@ -83,7 +83,7 @@ You MUST respond with ONLY valid JSON in this exact format:
   "reasoning": "<brief explanation of why you chose this tool>"
 }
 
-No extra text, no markdown code blocks — only raw JSON.
+No extra text, no markdown code blocks  only raw JSON.
 """
 
 

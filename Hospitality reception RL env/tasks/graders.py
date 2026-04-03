@@ -5,7 +5,7 @@ Each grader returns a score in [0.0, 1.0] based on:
   - correct_department   (0.25 points)
   - correct_doctor       (0.30 points)
   - booking_successful   (0.35 points)
-  - efficiency bonus     (0.10 points when done in ≤ expected_min_steps + 1)
+  - efficiency bonus     (0.10 points when done in  expected_min_steps + 1)
 
 The graders are deterministic: given the same episode state and task config,
 they always produce the same score.
@@ -31,8 +31,8 @@ def grade_episode(state: AppointmentState, task_config: Dict[str, Any]) -> float
 
     Parameters
     ----------
-    state       : AppointmentState  — the environment's internal state after episode ends.
-    task_config : dict              — produced by easy/medium/hard get_task_config().
+    state       : AppointmentState   the environment's internal state after episode ends.
+    task_config : dict               produced by easy/medium/hard get_task_config().
 
     Returns
     -------

@@ -1,5 +1,5 @@
 """
-streamlit_app.py — Interactive UI for the Healthcare Appointment Scheduling RL Agent.
+streamlit_app.py  Interactive UI for the Healthcare Appointment Scheduling RL Agent.
 
 Run with:
     streamlit run streamlit_app.py
@@ -18,7 +18,7 @@ import streamlit as st
 from dotenv import load_dotenv, find_dotenv
 
 # ---------------------------------------------------------------------------
-# Path setup — identical to run_baseline.py so local imports resolve
+# Path setup  identical to run_baseline.py so local imports resolve
 # ---------------------------------------------------------------------------
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -35,13 +35,13 @@ from server.data import map_symptoms_to_department
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="AI Healthcare Scheduling Agent",
-    page_icon="🏥",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # ---------------------------------------------------------------------------
-# Custom CSS — high-contrast dark theme (fully readable)
+# Custom CSS  high-contrast dark theme (fully readable)
 # ---------------------------------------------------------------------------
 st.markdown(
     """
@@ -52,13 +52,13 @@ st.markdown(
         font-family: 'Inter', sans-serif;
     }
 
-    /* ═══ BACKGROUND — deep charcoal ═══ */
+    /*  BACKGROUND  deep charcoal  */
     .stApp {
         background: #0e1117;
         min-height: 100vh;
     }
 
-    /* ═══ GLOBAL TEXT — bright white everywhere ═══ */
+    /*  GLOBAL TEXT  bright white everywhere  */
     .stApp p, .stApp span, .stApp div,
     .stApp li, .stApp small {
         color: #e2e8f0;
@@ -88,7 +88,7 @@ st.markdown(
         font-weight: 600 !important;
     }
 
-    /* ═══ SIDEBAR ═══ */
+    /*  SIDEBAR  */
     [data-testid="stSidebar"] {
         background: #111827 !important;
         border-right: 2px solid #1e293b !important;
@@ -111,7 +111,7 @@ st.markdown(
         display: inline-block;
     }
 
-    /* ═══ HERO ═══ */
+    /*  HERO  */
     .hero-title {
         font-size: 2.5rem;
         font-weight: 800;
@@ -129,7 +129,7 @@ st.markdown(
         margin-bottom: 1.5rem;
     }
 
-    /* ═══ MAIN CARD ═══ */
+    /*  MAIN CARD  */
     .main-card {
         background: #1a2236;
         border: 1.5px solid #2d3748;
@@ -138,7 +138,7 @@ st.markdown(
         margin-bottom: 1rem;
     }
 
-    /* ═══ TEXT INPUTS ═══ */
+    /*  TEXT INPUTS  */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea {
         background: #1a2236 !important;
@@ -158,7 +158,7 @@ st.markdown(
         box-shadow: 0 0 0 2px rgba(56,189,248,0.25) !important;
     }
 
-    /* ═══ BUTTONS ═══ */
+    /*  BUTTONS  */
     .stButton > button,
     [data-testid="stDownloadButton"] > button {
         background: linear-gradient(135deg, #1d4ed8, #0ea5e9) !important;
@@ -177,7 +177,7 @@ st.markdown(
         transform: translateY(-2px) !important;
     }
 
-    /* ═══ STEP CARDS ═══ */
+    /*  STEP CARDS  */
     .step-card {
         background: #1a2236;
         border-left: 4px solid #818cf8;
@@ -213,7 +213,7 @@ st.markdown(
         margin-top: 0.2rem;
     }
 
-    /* ═══ METRIC TILES ═══ */
+    /*  METRIC TILES  */
     .metric-tile {
         background: #1a2236;
         border: 1.5px solid #2d3e55;
@@ -235,7 +235,7 @@ st.markdown(
         margin-top: 4px;
     }
 
-    /* ═══ BADGES ═══ */
+    /*  BADGES  */
     .badge {
         display: inline-block;
         padding: 0.22rem 0.7rem;
@@ -251,7 +251,7 @@ st.markdown(
     .badge-purple { background: #1e1b4b; color: #c4b5fd; border: 1.5px solid #818cf8; }
     .badge-blue   { background: #0c1a2e; color: #7dd3fc; border: 1.5px solid #38bdf8; }
 
-    /* ═══ EXPANDER ═══ */
+    /*  EXPANDER  */
     .streamlit-expanderHeader {
         background: #1a2236 !important;
         border-radius: 8px !important;
@@ -259,7 +259,7 @@ st.markdown(
         font-weight: 600 !important;
     }
 
-    /* ═══ LOG BOX ═══ */
+    /*  LOG BOX  */
     .log-box {
         background: #080d14;
         border: 1px solid #1b2f46;
@@ -275,7 +275,7 @@ st.markdown(
         line-height: 1.6;
     }
 
-    /* ═══ RESULT BANNERS ═══ */
+    /*  RESULT BANNERS  */
     .result-banner {
         background: linear-gradient(135deg, #052e16, #0c2740);
         border: 1.5px solid #22c55e;
@@ -293,7 +293,7 @@ st.markdown(
     }
     .result-banner-fail h3 { color: #f1f5f9 !important; }
 
-    /* ═══ SCORE BARS ═══ */
+    /*  SCORE BARS  */
     .score-bar-bg {
         background: #1e293b;
         border-radius: 999px;
@@ -307,7 +307,7 @@ st.markdown(
         transition: width 0.6s ease;
     }
 
-    /* ═══ MISC ═══ */
+    /*  MISC  */
     hr { border-color: #1e293b !important; }
     .stSlider > div > div > div > div { background: #38bdf8 !important; }
     </style>
@@ -342,11 +342,11 @@ _init_state()
 # ---------------------------------------------------------------------------
 
 TOOL_ICONS: Dict[str, str] = {
-    "get_departments":      "🏛️",
-    "get_doctors":          "👨‍⚕️",
-    "check_availability":   "📅",
-    "book_appointment":     "✅",
-    "ask_user_clarification": "❓",
+    "get_departments":      "",
+    "get_doctors":          "",
+    "check_availability":   "",
+    "book_appointment":     "",
+    "ask_user_clarification": "",
 }
 
 TASK_REGISTRY = [
@@ -360,24 +360,24 @@ def _find_best_task_config(user_request: str):
     """Return (correct_dept, correct_doctor, config_fn) for the given request.
 
     Routing priority:
-    1. Exact sentence match → use predefined task config (grader-aligned).
-    2. Symptom keyword engine (map_symptoms_to_department) → always correct
-       for any free-text input (e.g. "back pain" → Orthopedics, not Cardiology).
-    3. Ambiguous (no keyword match) → correct_department = None, agent should
+    1. Exact sentence match  use predefined task config (grader-aligned).
+    2. Symptom keyword engine (map_symptoms_to_department)  always correct
+       for any free-text input (e.g. "back pain"  Orthopedics, not Cardiology).
+    3. Ambiguous (no keyword match)  correct_department = None, agent should
        call ask_user_clarification.
     """
     from server.data import DOCTORS
 
     req_lower = user_request.strip().lower()
 
-    # ── 1. Exact sentence match against predefined tasks ──────────────────────
+    #  1. Exact sentence match against predefined tasks 
     for _, req, dept, doc, cfg_fn in TASK_REGISTRY:
         if req_lower == req.lower():
             return dept, doc, cfg_fn
 
-    # ── 2. Primary router: symptom keyword engine ─────────────────────────────
+    #  2. Primary router: symptom keyword engine 
     #    map_symptoms_to_department has the proper SYMPTOM_KEYWORDS table,
-    #    e.g. "back pain" → Orthopedics, "migraine" → Neurology, etc.
+    #    e.g. "back pain"  Orthopedics, "migraine"  Neurology, etc.
     #    This is the ONLY reliable method for free-text inputs.
     auto_dept = map_symptoms_to_department(user_request)
 
@@ -386,11 +386,11 @@ def _find_best_task_config(user_request: str):
         from server.data import map_symptoms_to_doctor
         auto_doc = map_symptoms_to_doctor(user_request, auto_dept)
     else:
-        # Truly ambiguous — no keyword hit; agent should clarify
+        # Truly ambiguous  no keyword hit; agent should clarify
         auto_dept = None
         auto_doc = None
 
-    # ── 3. Build a dynamic task config ───────────────────────────────────────
+    #  3. Build a dynamic task config 
     _dept = auto_dept   # capture for closure
     _doc  = auto_doc
 
@@ -429,7 +429,7 @@ def _render_step_card(step_data: Dict[str, Any], idx: int) -> None:
     reasoning = step_data.get("reasoning", "")
 
     rc = _reward_class(reward)
-    icon = TOOL_ICONS.get(tool, "🔧")
+    icon = TOOL_ICONS.get(tool, "")
     reward_color = "#34d399" if reward > 0 else ("#f87171" if reward < 0 else "#a78bfa")
 
     card_html = f"""
@@ -443,9 +443,9 @@ def _render_step_card(step_data: Dict[str, Any], idx: int) -> None:
     """
     st.markdown(card_html, unsafe_allow_html=True)
 
-    with st.expander(f"📋 Step {idx} details — reward: {reward:+.4f}", expanded=False):
+    with st.expander(f" Step {idx} details  reward: {reward:+.4f}", expanded=False):
         if reasoning:
-            st.markdown(f"**🧠 Agent Reasoning:** _{reasoning}_")
+            st.markdown(f"** Agent Reasoning:** _{reasoning}_")
 
         col_a, col_b = st.columns([1, 1])
         with col_a:
@@ -453,7 +453,7 @@ def _render_step_card(step_data: Dict[str, Any], idx: int) -> None:
             st.json(result)
         with col_b:
             st.markdown("**Environment Feedback**")
-            st.info(message or "—")
+            st.info(message or "")
             rew_str = f"+{reward:.4f}" if reward > 0 else f"{reward:.4f}"
             badge_cls = "badge-green" if reward > 0 else ("badge-red" if reward < 0 else "badge-purple")
             st.markdown(
@@ -474,41 +474,41 @@ def _render_final_result() -> None:
     banner_cls = "result-banner" if success else "result-banner-fail"
     st.markdown(
         f'<div class="{banner_cls}">'
-        f'<h3 style="margin:0;color:#e2e8f0">{"✅ Booking Successful!" if success else "❌ Episode Ended — No Booking"}</h3>'
+        f'<h3 style="margin:0;color:#e2e8f0">{" Booking Successful!" if success else " Episode Ended  No Booking"}</h3>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
     # Booking summary
-    st.markdown("### 📋 Booking Summary")
+    st.markdown("###  Booking Summary")
     env_state = st.session_state.env_state
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        dept = env_state.identified_department or "—"
+        dept = env_state.identified_department or ""
         dept_correct = result.get("department_correct", False)
-        badge = '<span class="badge badge-green">✓ Correct</span>' if dept_correct else '<span class="badge badge-red">✗ Wrong</span>'
+        badge = '<span class="badge badge-green"> Correct</span>' if dept_correct else '<span class="badge badge-red"> Wrong</span>'
         st.markdown(
             f'<div class="metric-tile"><div class="metric-label">Department</div><div style="font-size:1.2rem;color:#e2e8f0;font-weight:600;">{dept}</div>{badge}</div>',
             unsafe_allow_html=True,
         )
     with col2:
-        doc = env_state.selected_doctor or "—"
+        doc = env_state.selected_doctor or ""
         doc_correct = result.get("doctor_correct", False)
-        badge = '<span class="badge badge-green">✓ Correct</span>' if doc_correct else '<span class="badge badge-red">✗ Wrong</span>'
+        badge = '<span class="badge badge-green"> Correct</span>' if doc_correct else '<span class="badge badge-red"> Wrong</span>'
         st.markdown(
             f'<div class="metric-tile"><div class="metric-label">Doctor</div><div style="font-size:1.1rem;color:#e2e8f0;font-weight:600;">{doc}</div>{badge}</div>',
             unsafe_allow_html=True,
         )
     with col3:
-        slot = env_state.selected_slot or "—"
+        slot = env_state.selected_slot or ""
         st.markdown(
             f'<div class="metric-tile"><div class="metric-label">Time Slot</div><div style="font-size:0.95rem;color:#e2e8f0;font-weight:600;">{slot}</div></div>',
             unsafe_allow_html=True,
         )
 
     st.markdown("---")
-    st.markdown("### 📊 Performance Metrics")
+    st.markdown("###  Performance Metrics")
 
     m1, m2, m3, m4 = st.columns(4)
     with m1:
@@ -529,7 +529,7 @@ def _render_final_result() -> None:
         )
     with m4:
         eff_bonus = result.get("efficiency_bonus", 0.0)
-        eff_label = "🏆 Earned!" if eff_bonus > 0 else "Not earned"
+        eff_label = " Earned!" if eff_bonus > 0 else "Not earned"
         st.markdown(
             f'<div class="metric-tile"><div class="metric-value">{eff_bonus:.2f}</div><div class="metric-label">Efficiency Bonus<br><small>{eff_label}</small></div></div>',
             unsafe_allow_html=True,
@@ -565,7 +565,7 @@ def _render_final_result() -> None:
         )
 
     st.markdown("---")
-    st.markdown("### 🧠 Agent Efficiency")
+    st.markdown("###  Agent Efficiency")
     min_steps = 4
     difficulty = result.get("difficulty", "custom")
     if difficulty == "hard":
@@ -675,10 +675,10 @@ def step_agent_machine(status_placeholder, steps_placeholder, log_placeholder, s
         action = st.session_state.pending_action
         question = action.parameters.get("question", "Could you provide more details?")
         
-        status_placeholder.warning("⚠️ The agent has paused to ask you a question.", icon="⏳")
+        status_placeholder.warning(" The agent has paused to ask you a question.", icon="")
         st.markdown(
             f"<div class='result-banner' style='border-color:#38bdf8; background:rgba(56,189,248,0.1)'>"
-            f"<h3 style='margin-top:0'>🤖 Agent asks:</h3><p style='font-size:1.1rem'>{question}</p>"
+            f"<h3 style='margin-top:0'> Agent asks:</h3><p style='font-size:1.1rem'>{question}</p>"
             f"</div>", 
             unsafe_allow_html=True
         )
@@ -716,7 +716,7 @@ def step_agent_machine(status_placeholder, steps_placeholder, log_placeholder, s
     with status_placeholder.container():
         st.markdown(
             f'<div style="color:#a78bfa;font-weight:600;font-size:0.95rem;">'
-            f'⚡ Agent is thinking... (Step {step_num + 1}/10)'
+            f' Agent is thinking... (Step {step_num + 1}/10)'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -777,7 +777,7 @@ def step_agent_machine(status_placeholder, steps_placeholder, log_placeholder, s
 
 
 def _render_steps_section() -> None:
-    """Called inside a placeholder — renders all step cards so far."""
+    """Called inside a placeholder  renders all step cards so far."""
     steps = st.session_state.steps
     if not steps:
         return
@@ -800,7 +800,7 @@ def _refresh_log(log_placeholder) -> None:
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown(
-        "<h2 style='color:#a78bfa;margin-bottom:0.5rem'>⚙️ Configuration</h2>",
+        "<h2 style='color:#a78bfa;margin-bottom:0.5rem'> Configuration</h2>",
         unsafe_allow_html=True,
     )
 
@@ -808,7 +808,7 @@ with st.sidebar:
     agent_mode = st.radio(
         "agent_mode_radio",
         options=["groq", "oracle"],
-        format_func=lambda x: "🤖 Groq LLM Agent" if x == "groq" else "🔬 Oracle (Deterministic)",
+        format_func=lambda x: " Groq LLM Agent" if x == "groq" else " Oracle (Deterministic)",
         label_visibility="collapsed",
     )
     st.session_state.agent_mode = agent_mode
@@ -832,9 +832,9 @@ with st.sidebar:
         groq_api_key = groq_key_input or env_key or None
 
         if groq_api_key:
-            st.success("Key loaded ✓", icon="🔑")
+            st.success("Key loaded ", icon="")
         else:
-            st.warning("No key — switch to Oracle mode", icon="⚠️")
+            st.warning("No key  switch to Oracle mode", icon="")
 
         st.markdown("**Groq Model**")
         groq_model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
@@ -846,17 +846,17 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("**Predefined Tasks**")
-    if st.button("📋 Easy — Chest Pain"):
+    if st.button(" Easy  Chest Pain"):
         st.session_state["prefill_request"] = EASY_REQ
-    if st.button("📋 Medium — Skin Rash"):
+    if st.button(" Medium  Skin Rash"):
         st.session_state["prefill_request"] = MED_REQ
-    if st.button("📋 Hard — Ambiguous Pain"):
+    if st.button(" Hard  Ambiguous Pain"):
         st.session_state["prefill_request"] = HARD_REQ
 
     st.markdown("---")
     st.markdown(
         "<div style='font-size:0.72rem;color:rgba(255,255,255,0.3);text-align:center'>"
-        "Healthcare Scheduling RL · OpenEnv · Powered by Groq"
+        "Healthcare Scheduling RL  OpenEnv  Powered by Groq"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -868,8 +868,8 @@ with st.sidebar:
 
 # Hero
 st.markdown(
-    "<div class='hero-title'>🏥 AI Healthcare Scheduling Agent</div>"
-    "<div class='hero-subtitle'>RL-powered doctor booking system · OpenEnv Hackathon Demo</div>",
+    "<div class='hero-title'> AI Healthcare Scheduling Agent</div>"
+    "<div class='hero-subtitle'>RL-powered doctor booking system  OpenEnv Hackathon Demo</div>",
     unsafe_allow_html=True,
 )
 
@@ -877,7 +877,7 @@ st.markdown(
 # Input section
 # ---------------------------------------------------------------------------
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
-st.markdown("### 💬 Describe your health issue")
+st.markdown("###  Describe your health issue")
 
 # Prefill from sidebar button
 prefill = st.session_state.pop("prefill_request", None)
@@ -892,9 +892,9 @@ user_input = st.text_input(
 
 col_btn1, col_btn2, col_spacer = st.columns([1, 1, 4])
 with col_btn1:
-    run_clicked = st.button("🚀 Run Agent", use_container_width=True)
+    run_clicked = st.button(" Run Agent", use_container_width=True)
 with col_btn2:
-    clear_clicked = st.button("🗑️ Clear", use_container_width=True)
+    clear_clicked = st.button(" Clear", use_container_width=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -913,11 +913,11 @@ if clear_clicked:
 # ---------------------------------------------------------------------------
 if run_clicked:
     if not user_input.strip():
-        st.error("⚠️ Please describe your health issue before running the agent.")
+        st.error(" Please describe your health issue before running the agent.")
         st.stop()
 
     if agent_mode == "groq" and not groq_api_key:
-        st.error("⚠️ No Groq API key found. Please enter your key in the sidebar or set GROQ_API_KEY in your .env file.")
+        st.error(" No Groq API key found. Please enter your key in the sidebar or set GROQ_API_KEY in your .env file.")
         st.stop()
 
     # Resolve task config
@@ -925,7 +925,7 @@ if run_clicked:
 
     st.markdown(
         f"<div style='font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:0.5rem'>"
-        f"🎯 Routing to: <b style='color:#a78bfa'>{correct_dept}</b> → "
+        f" Routing to: <b style='color:#a78bfa'>{correct_dept}</b>  "
         f"<b style='color:#60a5fa'>{correct_doctor}</b>"
         f" &nbsp;|&nbsp; Config: <b style='color:#34d399'>{config_fn().get('difficulty','custom').upper()}</b>"
         f"</div>",
@@ -950,14 +950,14 @@ if st.session_state.get("agent_running"):
     
     # Render placeholders
     status_ph   = st.empty()
-    st.markdown("### 🔍 Agent Trajectory")
+    st.markdown("###  Agent Trajectory")
     
     left_col, right_col = st.columns([3, 2])
     with left_col:
         st.markdown("#### Step-by-Step Actions")
         steps_ph = st.empty()
     with right_col:
-        st.markdown("#### 📟 Live Log")
+        st.markdown("####  Live Log")
         log_ph = st.empty()
 
     step_agent_machine(status_ph, steps_ph, log_ph, step_delay)
@@ -978,7 +978,7 @@ if st.session_state.steps or st.session_state.episode_done:
     # ----- Step-by-step trace -----
     if st.session_state.steps:
         st.markdown("---")
-        st.markdown("### 🔍 Agent Trajectory")
+        st.markdown("###  Agent Trajectory")
 
         left_col, right_col = st.columns([3, 2])
 
@@ -988,7 +988,7 @@ if st.session_state.steps or st.session_state.episode_done:
                 _render_step_card(s, s["step"])
 
         with right_col:
-            st.markdown("#### 📟 Live Log")
+            st.markdown("####  Live Log")
             logs = st.session_state.logs
             log_text = "\n".join(logs)
             st.markdown(
@@ -1010,7 +1010,7 @@ if st.session_state.steps or st.session_state.episode_done:
     # ----- Final result -----
     if st.session_state.episode_done and st.session_state.final_result is not None:
         st.markdown("---")
-        st.markdown("### 🏁 Final Result")
+        st.markdown("###  Final Result")
         _render_final_result()
 
         st.markdown("---")
@@ -1040,12 +1040,12 @@ if st.session_state.steps or st.session_state.episode_done:
         trajectory_json = json.dumps(trajectory_export, indent=2)
 
         with dl_col1:
-            with st.expander("🗂️ Show Full Trajectory JSON"):
+            with st.expander(" Show Full Trajectory JSON"):
                 st.code(trajectory_json, language="json")
 
         with dl_col2:
             st.download_button(
-                label="⬇️ Download Logs as JSON",
+                label=" Download Logs as JSON",
                 data=trajectory_json,
                 file_name="agent_trajectory.json",
                 mime="application/json",

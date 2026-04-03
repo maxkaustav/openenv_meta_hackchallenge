@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_baseline.py — Baseline evaluation script for the Healthcare Appointment
+run_baseline.py  Baseline evaluation script for the Healthcare Appointment
                   Scheduling RL environment.
 
 Runs the Groq agent over all three tasks (easy, medium, hard)
@@ -46,7 +46,7 @@ TASK_REGISTRY: List[Tuple[str, str, str, str, Any]] = [
 
 
 # ---------------------------------------------------------------------------
-# Oracle agent (deterministic, no LLM — for testing without API key)
+# Oracle agent (deterministic, no LLM  for testing without API key)
 # ---------------------------------------------------------------------------
 
 ORACLE_ACTIONS: Dict[str, List[AppointmentAction]] = {
@@ -114,7 +114,7 @@ def run_llm_task(
         action = agent.decide_action(obs)
         print(f"    Step {step}: {action.tool}({json.dumps(action.parameters)})")
         obs = env.step(action)
-        print(f"           → reward={obs.reward:.4f} | {obs.message[:80]}")
+        print(f"            reward={obs.reward:.4f} | {obs.message[:80]}")
         # Small sleep to avoid hitting Groq rate limits
         time.sleep(0.5)
 
@@ -171,7 +171,7 @@ def main() -> None:
     results: List[Dict[str, Any]] = []
 
     print("\n" + "=" * 62)
-    print("  Healthcare Appointment Scheduling — Baseline Evaluation")
+    print("  Healthcare Appointment Scheduling  Baseline Evaluation")
     print("=" * 62)
     mode = "ORACLE (deterministic)" if use_oracle else f"GROQ ({GroqAgent.MODEL if not use_oracle else 'n/a'})"
     print(f"  Mode: {mode}")

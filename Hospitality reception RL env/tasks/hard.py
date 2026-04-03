@@ -1,13 +1,13 @@
 """
-HARD Task — Healthcare Appointment Scheduling
+HARD Task  Healthcare Appointment Scheduling
 
 User request: "I feel pain but not sure where"
 Expected path:
   ask_user_clarification("Where is the pain located?")
-  → parse response (chest / breathing difficulty → Cardiology)
-  → get_departments() → get_doctors("Cardiology")
-  → check_availability("Dr. Sarah Smith")
-  → book_appointment("Dr. Sarah Smith", <any valid slot>)
+   parse response (chest / breathing difficulty  Cardiology)
+   get_departments()  get_doctors("Cardiology")
+   check_availability("Dr. Sarah Smith")
+   book_appointment("Dr. Sarah Smith", <any valid slot>)
 
 Ground truth:
   department : Cardiology
@@ -16,7 +16,7 @@ Ground truth:
 Difficulty note:
   The initial request is ambiguous. The agent MUST call ask_user_clarification
   before it can determine the correct department. The simulated user will
-  respond with chest/breathing symptoms (see data.py → CLARIFICATION_RESPONSES).
+  respond with chest/breathing symptoms (see data.py  CLARIFICATION_RESPONSES).
 """
 
 try:
@@ -55,7 +55,7 @@ def get_task_config() -> dict:
         "correct_department": CORRECT_DEPARTMENT,
         "correct_doctor": CORRECT_DOCTOR,
         "description": (
-            "The user's request is ambiguous — they report pain but cannot "
+            "The user's request is ambiguous  they report pain but cannot "
             "localise it. The agent must ask a clarifying question, interpret "
             "the response (chest pain + breathing difficulty), route to "
             "Cardiology, select Dr. Sarah Smith, and complete a booking."
@@ -63,8 +63,8 @@ def get_task_config() -> dict:
         "max_steps": 10,
         "expected_min_steps": 5,  # one extra step for clarification
         "hints": [
-            "Ambiguous request → ask_user_clarification first",
-            "User will mention chest and breathing → Cardiology",
+            "Ambiguous request  ask_user_clarification first",
+            "User will mention chest and breathing  Cardiology",
             "Dr. Sarah Smith specialises in general cardiology and chest pain",
         ],
         "requires_clarification": True,

@@ -1,5 +1,5 @@
 """
-Healthcare Appointment Scheduling — OpenEnv Environment.
+Healthcare Appointment Scheduling  OpenEnv Environment.
 
 Top-level package exposing the client and models for easy import.
 """

@@ -1,4 +1,4 @@
-"""Healthcare Appointment Scheduling — server components."""
+"""Healthcare Appointment Scheduling  server components."""
 
 from .environment import HealthcareAppointmentEnvironment
 

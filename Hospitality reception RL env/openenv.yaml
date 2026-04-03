@@ -73,10 +73,10 @@ observation_schema:
 tasks:
   - id: easy_chest_pain
     difficulty: easy
-    description: "User reports chest pain → Cardiology → Dr. Sarah Smith"
+    description: "User reports chest pain -> Cardiology -> Dr. Sarah Smith"
   - id: medium_skin_rash
     difficulty: medium
-    description: "User has a 2-week skin rash → Dermatology → Dr. Priya Patel"
+    description: "User has a 2-week skin rash -> Dermatology -> Dr. Priya Patel"
   - id: hard_ambiguous_pain
     difficulty: hard
-    description: "Ambiguous pain → clarification required → Cardiology → Dr. Sarah Smith"
+    description: "Ambiguous pain -> clarification required -> Cardiology -> Dr. Sarah Smith"

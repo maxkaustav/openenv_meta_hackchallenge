@@ -1,7 +1,7 @@
 """
 Hardcoded healthcare data: departments, doctors, slots, and symptom mappings.
 
-All data is accessed exclusively through tool functions — the agent is never
+All data is accessed exclusively through tool functions  the agent is never
 given this data directly, only through tool calls.
 """
 
@@ -110,7 +110,7 @@ DOCTORS: Dict[str, List[Dict]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Symptom → Department mapping (rule-based)
+# Symptom  Department mapping (rule-based)
 # ---------------------------------------------------------------------------
 
 SYMPTOM_KEYWORDS: Dict[str, List[str]] = {
@@ -146,7 +146,7 @@ CLARIFICATION_RESPONSES: Dict[str, str] = {
         "I also feel short of breath sometimes."
     ),
     "location": (
-        "It's my chest — a tight, squeezing sensation, especially in the morning."
+        "It's my chest  a tight, squeezing sensation, especially in the morning."
     ),
     "duration": "It started about three days ago and has been getting worse.",
     "severity": "I'd rate the pain around 6 out of 10. It's uncomfortable but I can still walk.",
@@ -179,7 +179,7 @@ def get_clarification_response(question: str) -> str:
 
 def map_symptoms_to_department(user_request: str) -> Optional[str]:
     """
-    Rule-based symptom → department mapper.
+    Rule-based symptom  department mapper.
 
     Returns the best-matching department name or None if ambiguous.
     Scores each department by keyword hit count.
