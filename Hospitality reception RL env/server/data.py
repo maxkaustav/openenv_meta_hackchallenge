@@ -198,7 +198,7 @@ def map_symptoms_to_department(user_request: str) -> Optional[str]:
     return best_dept
 
 
-def map_symptoms_to_doctor(user_request: str, department_name: str) -> Optional[str]:
+def department_to_doctor(user_request: str, department_name: str) -> Optional[str]:
     """
     Given a user request and a department, find the most appropriate doctor
     by matching keywords in their specialization.
