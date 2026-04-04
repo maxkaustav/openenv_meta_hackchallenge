@@ -11,7 +11,7 @@ The hospitalmanage_triage_env environment is a simple test environment that echo
 """
 
 from openenv.core.env_server.types import Action, Observation
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 
 class HospitalmanageTriageAction(Action):
@@ -27,3 +27,9 @@ class HospitalmanageTriageObservation(Observation):
     output_message: str = Field(default="", description="The output message")
     tool_executed: str = Field(default="", description="The tool executed")
 
+class HospitalToolsOutput(BaseModel):
+    """Output from the tools in the Hospitalmanage Triage Env environment."""
+    
+    tool: str = Field(..., description="The tool that was executed")
+    message: str = Field(..., description="The message returned by the tool")
+    tool_state: dict = Field(..., description="The state of the tool execution")
