@@ -31,6 +31,7 @@ from models import AppointmentAction
 from tasks.easy   import get_task_config as easy_config,   USER_REQUEST as EASY_REQ,   CORRECT_DEPARTMENT as EASY_DEPT,   CORRECT_DOCTOR as EASY_DOC
 from tasks.medium import get_task_config as medium_config, USER_REQUEST as MED_REQ,    CORRECT_DEPARTMENT as MED_DEPT,    CORRECT_DOCTOR as MED_DOC
 from tasks.hard   import get_task_config as hard_config,   USER_REQUEST as HARD_REQ,   CORRECT_DEPARTMENT as HARD_DEPT,   CORRECT_DOCTOR as HARD_DOC
+from tasks.rebook import get_task_config as rebook_config, USER_REQUEST as REB_REQ,    CORRECT_DEPARTMENT as REB_DEPT,    CORRECT_DOCTOR as REB_DOC
 from tasks.graders import grade_full_breakdown
 
 
@@ -42,6 +43,7 @@ TASK_REGISTRY: List[Tuple[str, str, str, str, Any]] = [
     ("easy",   EASY_REQ,  EASY_DEPT,  EASY_DOC,  easy_config),
     ("medium", MED_REQ,   MED_DEPT,   MED_DOC,   medium_config),
     ("hard",   HARD_REQ,  HARD_DEPT,  HARD_DOC,  hard_config),
+    ("rebook", REB_REQ,   REB_DEPT,   REB_DOC,   rebook_config),
 ]
 
 
@@ -68,6 +70,10 @@ ORACLE_ACTIONS: Dict[str, List[AppointmentAction]] = {
         AppointmentAction(tool="get_doctors", parameters={"department": "Cardiology"}),
         AppointmentAction(tool="check_availability", parameters={"doctor": "Dr. Sarah Smith"}),
         AppointmentAction(tool="book_appointment", parameters={"doctor": "Dr. Sarah Smith", "slot": "2024-01-15 09:00 AM"}),
+    ],
+    "rebook": [
+        AppointmentAction(tool="check_availability", parameters={"doctor": "Dr. Priya Patel"}),
+        AppointmentAction(tool="book_appointment", parameters={"doctor": "Dr. Priya Patel", "slot": "2024-01-15 08:00 AM"}),
     ],
 }
 
@@ -136,7 +142,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--task",
-        choices=["easy", "medium", "hard", "all"],
+        choices=["easy", "medium", "hard", "rebook", "all"],
         default="all",
         help="Which task(s) to run (default: all).",
     )
@@ -191,10 +197,10 @@ def main() -> None:
         results.append(breakdown)
 
         print(f"\n  [OK] Score: {breakdown['final_score']:.3f}")
+        print(f"      Got departments:     {breakdown['used_get_departments']}  (+{breakdown['get_departments_score']:.2f})")
         print(f"      Department correct:  {breakdown['department_correct']}  (+{breakdown['department_score']:.2f})")
         print(f"      Doctor correct:      {breakdown['doctor_correct']}  (+{breakdown['doctor_score']:.2f})")
         print(f"      Booking successful:  {breakdown['booking_successful']}  (+{breakdown['booking_score']:.2f})")
-        print(f"      Efficiency bonus:    +{breakdown['efficiency_bonus']:.2f}")
         print(f"      Clarification penalty: {breakdown['clarification_penalty']:.2f}")
         print(f"      Steps taken:         {breakdown['steps_taken']}")
         print(f"      Env cumulative reward:{breakdown['cumulative_env_reward']:.4f}")
@@ -205,7 +211,7 @@ def main() -> None:
     print("=" * 62)
     avg_score = sum(r["final_score"] for r in results) / max(len(results), 1)
     for r in results:
-        bar = "#" * int(r["final_score"] * 20)
+        bar = "#" * int(r["final_score"] * 5)
         print(f"  {r['difficulty'].upper():6s}  {r['final_score']:.3f}  |{bar:<20}|")
     print(f"\n  Average Score: {avg_score:.3f}")
     print("=" * 62 + "\n")

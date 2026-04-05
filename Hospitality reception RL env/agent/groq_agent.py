@@ -68,12 +68,13 @@ You may call ONLY ONE of these tools per turn:
    → Ask the patient a clarifying question when the symptom is ambiguous.
 
 ## Strategy
-1. If the user request is ambiguous, call ask_user_clarification FIRST.
-2. Call get_departments() to see available departments.
-3. Match the symptom to the correct department.
-4. Call get_doctors(department) to find the appropriate specialist.
-5. Call check_availability(doctor) to find an open slot.
-6. Call book_appointment(doctor, slot) with exact strings to complete.
+1. If the user explicitly asks to rebook or names a specific doctor, SKIP directly to check_availability(doctor).
+2. Otherwise, if the user request is ambiguous, call ask_user_clarification FIRST.
+3. Call get_departments() to see available departments.
+4. Match the symptom to the correct department.
+5. Call get_doctors(department) to find the appropriate specialist.
+6. Call check_availability(doctor) to find an open slot.
+7. Call book_appointment(doctor, slot) with exact strings to complete.
 
 ## Output Format
 You MUST respond with ONLY valid JSON in this exact format:

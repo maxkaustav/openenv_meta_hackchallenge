@@ -45,22 +45,38 @@ def grade_episode(state: AppointmentState, task_config: Dict[str, Any]) -> float
 
     score = 0.0
 
-    # 1. Department correctness (0.25)
-    if state.identified_department == correct_dept:
-        score += 0.25
+    # 0. Get departments
+    is_rebook = task_config.get("is_rebook", False)
+    used_get_departments = any(
+        entry.get("tool") == "get_departments"
+        for entry in state.conversation_history
+    )
+    if not is_rebook and used_get_departments:
+        score += 1.0
 
-    # 2. Doctor correctness (0.30)
-    if state.selected_doctor == correct_doctor:
-        score += 0.30
+    if is_rebook:
+        score += 2.0
 
-    # 3. Booking success (0.35)
+    # 1. Department correctness
+    if not is_rebook and state.identified_department == correct_dept:
+        score += 1.0
+
+    # 2. Doctor correctness
+    is_doctor_correct = state.selected_doctor == correct_doctor
+    if is_rebook and state.selected_doctor and hasattr(state, "user_request"):
+        req_l = state.user_request.lower()
+        doc_l = state.selected_doctor.lower()
+        doc_last = state.selected_doctor.split(" ")[-1].lower()
+        if doc_l in req_l or doc_last in req_l:
+            is_doctor_correct = True
+
+    if is_doctor_correct:
+        score += 1.0
+
+    # 3. Booking success
     if state.booking_successful:
-        score += 0.35
+        score += 1.0
 
-    # 4. Efficiency bonus (0.10)
-    #    Awarded only when booking was also successful
-    if state.booking_successful and state.step_count <= min_steps + 1:
-        score += 0.10
 
     # 5. Penalty deductions
     #    Reduce score if agent ignored required clarification (hard task)
@@ -70,10 +86,10 @@ def grade_episode(state: AppointmentState, task_config: Dict[str, Any]) -> float
             for entry in state.conversation_history
         )
         if not used_clarification:
-            score -= 0.10  # penalise skipping clarification
+            score -= 0.50  # penalise skipping clarification
 
-    # 6. Cap score to [0.0, 1.0]
-    score = max(0.0, min(1.0, round(score, 4)))
+    # 6. Lower bound score to 0.0
+    score = max(0.0, round(score, 4))
     return score
 
 
@@ -115,32 +131,48 @@ def grade_full_breakdown(
     correct_doctor = state.correct_doctor or task_config.get("correct_doctor")
     min_steps      = task_config.get("expected_min_steps", 4)
     requires_clr   = task_config.get("requires_clarification", False)
+    is_rebook      = task_config.get("is_rebook", False)
 
-    dept_score  = 0.25 if state.identified_department == correct_dept else 0.0
-    doc_score   = 0.30 if state.selected_doctor == correct_doctor else 0.0
-    book_score  = 0.35 if state.booking_successful else 0.0
-    eff_score   = (
-        0.10 if state.booking_successful and state.step_count <= min_steps + 1 else 0.0
+    used_get_departments = any(
+        entry.get("tool") == "get_departments"
+        for entry in state.conversation_history
     )
+    missing_stage_bonus = 2.0 if is_rebook else 0.0
+    get_dept_score = 1.0 if not is_rebook and used_get_departments else 0.0
+    dept_score  = 1.0 if not is_rebook and state.identified_department == correct_dept else 0.0
+    is_doctor_correct = state.selected_doctor == correct_doctor
+    if is_rebook and state.selected_doctor and hasattr(state, "user_request"):
+        req_l = state.user_request.lower()
+        doc_l = state.selected_doctor.lower()
+        doc_last = state.selected_doctor.split(" ")[-1].lower()
+        if doc_l in req_l or doc_last in req_l:
+            is_doctor_correct = True
+
+    doc_score   = 1.0 if is_doctor_correct else 0.0
+    book_score  = 1.0 if state.booking_successful else 0.0
+
 
     used_clarification = any(
         entry.get("tool") == "ask_user_clarification"
         for entry in state.conversation_history
     )
-    clr_penalty = -0.10 if requires_clr and not used_clarification else 0.0
+    clr_penalty = -0.50 if requires_clr and not used_clarification else 0.0
 
-    total = max(0.0, min(1.0, dept_score + doc_score + book_score + eff_score + clr_penalty))
+    total = max(0.0, get_dept_score + dept_score + doc_score + book_score + missing_stage_bonus + clr_penalty)
 
     return {
         "task_id": task_config["task_id"],
         "difficulty": task_config["difficulty"],
-        "department_correct": state.identified_department == correct_dept,
+        "used_get_departments": used_get_departments,
+        "get_departments_score": get_dept_score,
+        "is_rebook": is_rebook,
+        "missing_stage_bonus": missing_stage_bonus,
+        "department_correct": True if is_rebook else state.identified_department == correct_dept,
         "department_score": dept_score,
-        "doctor_correct": state.selected_doctor == correct_doctor,
+        "doctor_correct": is_doctor_correct,
         "doctor_score": doc_score,
         "booking_successful": state.booking_successful,
         "booking_score": book_score,
-        "efficiency_bonus": eff_score,
         "clarification_penalty": clr_penalty,
         "steps_taken": state.step_count,
         "cumulative_env_reward": round(state.cumulative_reward, 4),

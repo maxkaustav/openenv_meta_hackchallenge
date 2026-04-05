@@ -96,7 +96,8 @@ class HealthcareAppointmentEnvironment:
             message=(
                 f"New episode started. User says: \"{user_request}\". "
                 f"Available tools: {sorted(VALID_TOOLS)}. "
-                "Call get_departments() to begin."
+                "If naming a specific doctor, try check_availability() directly. "
+                "Otherwise, call get_departments() to begin."
             ),
         )
 
@@ -125,7 +126,7 @@ class HealthcareAppointmentEnvironment:
         if s.booking_successful or s.step_count > self.MAX_STEPS:
             return self._make_observation(
                 tool_result={"error": "Episode already ended."},
-                reward=-0.1,
+                reward=-0.50,
                 done=True,
                 message="Episode has already ended.",
             )
@@ -133,9 +134,10 @@ class HealthcareAppointmentEnvironment:
         # --- Dispatch the tool call -----------------------------------------
         tool_name = action.tool
         params = action.parameters
+        reward = 0.0
 
         if tool_name not in VALID_TOOLS:
-            reward = -0.2
+            reward = -0.50
             result = {
                 "error": f"Invalid tool '{tool_name}'.",
                 "valid_tools": sorted(VALID_TOOLS),
@@ -151,12 +153,6 @@ class HealthcareAppointmentEnvironment:
                 message=f"Invalid tool '{tool_name}'. Use one of: {sorted(VALID_TOOLS)}",
             )
 
-        # Detect unnecessary repetitions (same tool + same params twice in a row)
-        if len(s.tools_called) >= 2 and s.tools_called[-1] == tool_name:
-            reward = -0.1
-        else:
-            reward = 0.0
-
         result = dispatch_tool(tool_name, params)
         s.tools_called.append(tool_name)
         s.conversation_history.append(
@@ -168,24 +164,28 @@ class HealthcareAppointmentEnvironment:
         message = ""
 
         if tool_name == "get_departments":
-            message = "Retrieved department list. Now call get_doctors(department)."
+            if s.tools_called.count("get_departments") == 1:
+                reward += 1.0
+                message = "Retrieved department list. Now call get_doctors(department). (+1.0)"
+            else:
+                message = "Retrieved department list again."
 
         elif tool_name == "get_doctors":
             dept = params.get("department", "")
             resolved = self._resolve_department(dept)
             if resolved is None:
-                reward += -0.3
+                reward += -0.50
                 message = f"Department '{dept}' not found. Try again with a valid department."
             else:
                 if resolved == s.correct_department:
                     if s.identified_department != resolved:
                         # First time correctly identifying
-                        reward += 0.2
-                        message = f"Correct department '{resolved}' identified! (+0.2)"
+                        reward += 1.0
+                        message = f"Correct department '{resolved}' identified! (+1.0)"
                     else:
                         message = f"Department '{resolved}' already identified."
                 else:
-                    reward += -0.3
+                    reward += -0.50
                     message = (
                         f"Department '{resolved}' may not match the user's symptoms. "
                         "Consider the symptom description more carefully."
@@ -196,19 +196,25 @@ class HealthcareAppointmentEnvironment:
             doctor = params.get("doctor", "")
             doc_record = self._find_doctor(doctor)
             if doc_record is None:
-                reward += -0.2
+                reward += -0.50
                 message = f"Doctor '{doctor}' not found."
             else:
                 dept_of_doc = doc_record["department"]
+                is_rebook_intent = "rebook" in s.user_request.lower()
+                doctor_in_request = doctor.lower() in s.user_request.lower() or doctor.split(" ")[-1].lower() in s.user_request.lower()
+
                 if (
                     s.correct_department
                     and dept_of_doc == s.correct_department
                     and doc_record["name"] == s.correct_doctor
-                ):
-                    reward += 0.1
-                    message = f"Checking availability for the right doctor ({doctor}). (+0.1)"
-                elif dept_of_doc != s.correct_department:
-                    reward += -0.1
+                ) or (is_rebook_intent and doctor_in_request):
+                    if s.selected_doctor != doc_record["name"]:
+                        reward += 1.0
+                        message = f"Checking availability for the right doctor ({doctor}). (+1.0)"
+                    else:
+                        message = f"Checking availability for {doctor} again."
+                elif s.correct_department is not None and dept_of_doc != s.correct_department:
+                    reward += -0.50
                     message = (
                         f"Doctor '{doctor}' is in '{dept_of_doc}', "
                         "which may not match the user's symptoms."
@@ -230,34 +236,32 @@ class HealthcareAppointmentEnvironment:
                 dept_correct = booked_dept == s.correct_department
                 doctor_correct = booked_doctor == s.correct_doctor
 
+                is_rebook_intent = "rebook" in s.user_request.lower()
+                doctor_in_request = booked_doctor.lower() in s.user_request.lower() or booked_doctor.split(" ")[-1].lower() in s.user_request.lower()
+
+                if is_rebook_intent and doctor_in_request:
+                    dept_correct = True
+                    doctor_correct = True
+
                 booking_reward = 0.0
                 if dept_correct and doctor_correct:
-                    booking_reward = 0.5
-                    # Efficiency bonus: fewer steps = better
-                    if s.step_count <= 4:
-                        booking_reward += 0.2
-                        message = (
-                            f"Perfect booking! Correct department and doctor. "
-                            f"Efficiency bonus applied! (+0.7 total)"
-                        )
-                    else:
-                        message = (
-                            f"Booking successful with correct department and doctor. (+0.5)"
-                        )
+                    booking_reward = 1.0
+                    message = (
+                        f"Booking successful with correct department and doctor. (+1.0)"
+                    )
                 elif dept_correct and not doctor_correct:
-                    booking_reward = 0.1
-                    reward += -0.4
+                    booking_reward = 0.0
+                    reward += -0.50
                     message = (
                         f"Booking in the right department but wrong doctor specialization. "
-                        f"(-0.4 specialization penalty)"
+                        f"(-0.50 specialization penalty)"
                     )
                 else:
                     booking_reward = 0.0
-                    reward += -0.3  # wrong department
-                    reward += -0.4  # wrong doctor
+                    reward += -0.50
                     message = (
                         "Booking with wrong department and doctor! "
-                        "This is a major failure. (-0.7 total)"
+                        "This is a major failure. (-0.50 total)"
                     )
 
                 reward += booking_reward
@@ -265,31 +269,46 @@ class HealthcareAppointmentEnvironment:
                 s.selected_doctor = booked_doctor
                 done = True
             else:
-                reward += -0.2
+                reward += -0.50
                 message = f"Booking failed: {result.get('error', 'Unknown error.')}"
 
         elif tool_name == "ask_user_clarification":
-            # Clarification is acceptable for ambiguous requests
-            if s.step_count <= 2:
-                reward += 0.05  # small positive for appropriate use
-                message = "Got user clarification. (+0.05)"
-            else:
-                reward += -0.05  # slight penalty for late clarification
-                message = "Clarification obtained (late penalty -0.05)."
+            # Clarification resolves ambiguous states but doesn't grant bonus score directly
+            message = "Got user clarification."
                 
-            # If episode started ambiguously, update ground truth based on response
-            if s.correct_department is None and result.get("user_response"):
-                from .data import map_symptoms_to_department, map_symptoms_to_doctor
+            # Allow user clarification to dynamically update or override the ground truth
+            if result.get("user_response"):
+                from .data import DOCTORS, map_symptoms_to_department, department_to_doctor
                 user_res = result["user_response"]
-                new_dept = map_symptoms_to_department(user_res)
-                if new_dept:
-                    s.correct_department = new_dept
-                    s.correct_doctor = map_symptoms_to_doctor(user_res, new_dept)
+                s.user_request = s.user_request + " | " + user_res
+                
+                explicit_doctor = None
+                explicit_doc_dept = None
+                res_lower = user_res.lower()
+                for dept, doc_list in DOCTORS.items():
+                    for doc_obj in doc_list:
+                        d_name = doc_obj["name"].lower()
+                        d_last = doc_obj["name"].split()[-1].lower()
+                        if d_name in res_lower or d_last in res_lower:
+                            explicit_doctor = doc_obj["name"]
+                            explicit_doc_dept = dept
+                            break
+                    if explicit_doctor:
+                        break
+
+                if explicit_doctor:
+                    s.correct_department = explicit_doc_dept
+                    s.correct_doctor = explicit_doctor
+                else:
+                    new_dept = map_symptoms_to_department(user_res)
+                    if new_dept:
+                        s.correct_department = new_dept
+                        s.correct_doctor = department_to_doctor(user_res, new_dept)
 
         # Check max steps
         if s.step_count >= self.MAX_STEPS and not done:
             done = True
-            reward += -0.1
+            reward += -0.50
             message = f"Maximum steps ({self.MAX_STEPS}) reached. Episode ended."
 
         s.cumulative_reward += reward

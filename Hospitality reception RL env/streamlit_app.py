@@ -27,6 +27,7 @@ from models import AppointmentObservation, AppointmentAction
 from tasks.easy   import get_task_config as easy_config,   USER_REQUEST as EASY_REQ,   CORRECT_DEPARTMENT as EASY_DEPT,   CORRECT_DOCTOR as EASY_DOC
 from tasks.medium import get_task_config as medium_config, USER_REQUEST as MED_REQ,    CORRECT_DEPARTMENT as MED_DEPT,    CORRECT_DOCTOR as MED_DOC
 from tasks.hard   import get_task_config as hard_config,   USER_REQUEST as HARD_REQ,   CORRECT_DEPARTMENT as HARD_DEPT,   CORRECT_DOCTOR as HARD_DOC
+from tasks.rebook import get_task_config as rebook_config, USER_REQUEST as REB_REQ,    CORRECT_DEPARTMENT as REB_DEPT,    CORRECT_DOCTOR as REB_DOC
 from tasks.graders import grade_full_breakdown
 from server.data import map_symptoms_to_department
 
@@ -353,6 +354,7 @@ TASK_REGISTRY = [
     ("easy",   EASY_REQ,  EASY_DEPT,  EASY_DOC,  easy_config),
     ("medium", MED_REQ,   MED_DEPT,   MED_DOC,   medium_config),
     ("hard",   HARD_REQ,  HARD_DEPT,  HARD_DOC,  hard_config),
+    ("rebook", REB_REQ,   REB_DEPT,   REB_DOC,   rebook_config),
 ]
 
 
@@ -376,15 +378,30 @@ def _find_best_task_config(user_request: str):
             return dept, doc, cfg_fn
 
     # ── 2. Primary router: symptom keyword engine ─────────────────────────────
-    #    map_symptoms_to_department has the proper SYMPTOM_KEYWORDS table,
-    #    e.g. "back pain" → Orthopedics, "migraine" → Neurology, etc.
-    #    This is the ONLY reliable method for free-text inputs.
+    #    map_symptoms_to_department has the proper SYMPTOM_KEYWORDS table.
     auto_dept = map_symptoms_to_department(user_request)
 
-    # Determine the most suitable doctor based on specialization overlap
-    if auto_dept and auto_dept in DOCTORS:
-        from server.data import map_symptoms_to_doctor
-        auto_doc = map_symptoms_to_doctor(user_request, auto_dept)
+    from server.data import DOCTORS
+    explicit_doctor = None
+    explicit_doc_dept = None
+    req_lower = user_request.lower()
+    for dept, doc_list in DOCTORS.items():
+        for doc_obj in doc_list:
+            d_name = doc_obj["name"].lower()
+            d_last = doc_obj["name"].split()[-1].lower()
+            if d_name in req_lower or d_last in req_lower:
+                explicit_doctor = doc_obj["name"]
+                explicit_doc_dept = dept
+                break
+        if explicit_doctor:
+            break
+
+    if explicit_doctor:
+        auto_dept = explicit_doc_dept
+        auto_doc = explicit_doctor
+    elif auto_dept and auto_dept in DOCTORS:
+        from server.data import department_to_doctor
+        auto_doc = department_to_doctor(user_request, auto_dept)
     else:
         # Truly ambiguous — no keyword hit; agent should clarify
         auto_dept = None
@@ -394,6 +411,8 @@ def _find_best_task_config(user_request: str):
     _dept = auto_dept   # capture for closure
     _doc  = auto_doc
 
+    is_rebook_intent = "rebook" in req_lower or explicit_doctor is not None
+
     def dynamic_config():
         return {
             "task_id": "custom",
@@ -401,8 +420,9 @@ def _find_best_task_config(user_request: str):
             "user_request": user_request,
             "correct_department": _dept,
             "correct_doctor": _doc,
-            "expected_min_steps": 4,
-            "requires_clarification": _dept is None,
+            "expected_min_steps": 2 if is_rebook_intent else 4,
+            "requires_clarification": _dept is None and not is_rebook_intent,
+            "is_rebook": is_rebook_intent,
         }
 
     return _dept, _doc, dynamic_config
@@ -510,10 +530,10 @@ def _render_final_result() -> None:
     st.markdown("---")
     st.markdown("### 📊 Performance Metrics")
 
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3 = st.columns(3)
     with m1:
         st.markdown(
-            f'<div class="metric-tile"><div class="metric-value">{score:.2%}</div><div class="metric-label">Final Score</div></div>',
+            f'<div class="metric-tile"><div class="metric-value">{score:g}/4</div><div class="metric-label">Final Score</div></div>',
             unsafe_allow_html=True,
         )
     with m2:
@@ -527,22 +547,20 @@ def _render_final_result() -> None:
             f'<div class="metric-tile"><div class="metric-value">{env_reward:.3f}</div><div class="metric-label">Total Reward</div></div>',
             unsafe_allow_html=True,
         )
-    with m4:
-        eff_bonus = result.get("efficiency_bonus", 0.0)
-        eff_label = "🏆 Earned!" if eff_bonus > 0 else "Not earned"
-        st.markdown(
-            f'<div class="metric-tile"><div class="metric-value">{eff_bonus:.2f}</div><div class="metric-label">Efficiency Bonus<br><small>{eff_label}</small></div></div>',
-            unsafe_allow_html=True,
-        )
 
+    is_rebook = result.get("is_rebook", False)
     # Score breakdown bar
     st.markdown("#### Score Breakdown")
-    components = [
-        ("Department", result.get("department_score", 0.0), 0.25, "#a78bfa"),
-        ("Doctor",     result.get("doctor_score",     0.0), 0.30, "#60a5fa"),
-        ("Booking",    result.get("booking_score",    0.0), 0.35, "#34d399"),
-        ("Efficiency", result.get("efficiency_bonus", 0.0), 0.10, "#fbbf24"),
-    ]
+    components = []
+    if not is_rebook:
+        components.extend([
+            ("Get Depts",  result.get("get_departments_score", 0.0), 1.0, "#93c5fd"),
+            ("Department", result.get("department_score", 0.0), 1.0, "#a78bfa"),
+        ])
+    components.extend([
+        ("Doctor",     result.get("doctor_score",     0.0), 1.0, "#60a5fa"),
+        ("Booking",    result.get("booking_score",    0.0), 1.0, "#34d399"),
+    ])
     for label, earned, max_val, color in components:
         pct = earned / max_val if max_val > 0 else 0
         fill_w = int(pct * 100)
@@ -561,36 +579,6 @@ def _render_final_result() -> None:
     if clr_penalty < 0:
         st.markdown(
             f'<span class="badge badge-red">Clarification Penalty: {clr_penalty:.2f}</span>',
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("---")
-    st.markdown("### 🧠 Agent Efficiency")
-    min_steps = 4
-    difficulty = result.get("difficulty", "custom")
-    if difficulty == "hard":
-        min_steps = 5
-
-    optimality = min_steps / max(steps, 1)
-    optimality = min(optimality, 1.0)
-
-    eff_col1, eff_col2 = st.columns([2, 1])
-    with eff_col1:
-        bar_w = int(optimality * 100)
-        bar_color = "#34d399" if optimality >= 0.8 else ("#fbbf24" if optimality >= 0.5 else "#f87171")
-        st.markdown(
-            f"<div style='color:rgba(255,255,255,0.6);font-size:0.82rem;margin-bottom:4px'>"
-            f"Optimal path: ~{min_steps} steps  |  Agent took: {steps} steps"
-            f"</div>"
-            f"<div class='score-bar-bg'>"
-            f"  <div class='score-bar-fill' style='width:{bar_w}%;background:{bar_color}'></div>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-    with eff_col2:
-        st.markdown(
-            f'<div class="metric-tile"><div class="metric-value" style="color:{bar_color}">{optimality:.0%}</div>'
-            f'<div class="metric-label">Efficiency</div></div>',
             unsafe_allow_html=True,
         )
 
@@ -845,18 +833,9 @@ with st.sidebar:
     step_delay = st.slider("step_delay", min_value=0.0, max_value=2.0, value=0.7, step=0.1, label_visibility="collapsed")
 
     st.markdown("---")
-    st.markdown("**Predefined Tasks**")
-    if st.button("📋 Easy — Chest Pain"):
-        st.session_state["prefill_request"] = EASY_REQ
-    if st.button("📋 Medium — Skin Rash"):
-        st.session_state["prefill_request"] = MED_REQ
-    if st.button("📋 Hard — Ambiguous Pain"):
-        st.session_state["prefill_request"] = HARD_REQ
-
-    st.markdown("---")
     st.markdown(
         "<div style='font-size:0.72rem;color:rgba(255,255,255,0.3);text-align:center'>"
-        "Healthcare Scheduling RL · OpenEnv · Powered by Groq"
+        "Healthcare Scheduling RL · OpenEnv"
         "</div>",
         unsafe_allow_html=True,
     )
