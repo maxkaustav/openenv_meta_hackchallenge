@@ -10,6 +10,7 @@ State tracks the full episode: department identified, doctor selected,
 booking outcome, and conversation history for graders.
 """
 
+from openenv.core.env_server import Environment
 import uuid
 from typing import Optional
 
@@ -25,7 +26,7 @@ except ImportError:
     from server.tools import VALID_TOOLS, dispatch_tool  # type: ignore
 
 
-class HealthcareAppointmentEnvironment:
+class HealthcareAppointmentEnvironment(Environment):
     """
     Healthcare Appointment Scheduling RL Environment.
 
