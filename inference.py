@@ -128,12 +128,12 @@ async def main():
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     
     # Initialize environment
-    if IMAGE_NAME:
-        env = await HealthcareEnv.from_docker_image(IMAGE_NAME)
-    else:
-        # Fallback for local testing if no image name provided
-        env_url = os.getenv("API_BASE_URL_ENV", "http://localhost:8000")
-        env = HealthcareEnv(base_url=env_url)
+    # if IMAGE_NAME:
+    #     env = await HealthcareEnv.from_docker_image(IMAGE_NAME)
+    # else:
+    #     # Fallback for local testing if no image name provided
+    #     env_url = os.getenv("API_BASE_URL_ENV", "http://localhost:8000")
+    env = HealthcareEnv(base_url='https://huggingface.co/spaces/Fergus2000/hospital-env').sync()
 
     rewards: List[float] = []
     steps_taken = 0
