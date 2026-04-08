@@ -50,7 +50,7 @@ app = create_app(
     CallToolAction,
     HospitalmanageTriageObservation,
     env_name="hospitalmanage_triage_env",
-    max_concurrent_envs=1,  # increase this number to allow more concurrent WebSocket sessions
+    max_concurrent_envs=4,  # increase this number to allow more concurrent WebSocket sessions
 )
 
 
@@ -73,7 +73,7 @@ def main():
     """
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":

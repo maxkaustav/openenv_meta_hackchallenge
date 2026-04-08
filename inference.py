@@ -6,30 +6,48 @@ from typing import List, Optional
 
 from openai import OpenAI
 
-from my_env_v4 import MyEnvV4Action, MyEnvV4Env
+from client import HospitalmanageTriageEnv
+from openenv.core.env_server.mcp_types import CallToolAction
+
+
 IMAGE_NAME = os.getenv("IMAGE_NAME") # If you are using docker image 
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
-MODEL_NAME = os.getenv("MODEL_NAME") or "Qwen/Qwen2.5-72B-Instruct"
-TASK_NAME = os.getenv("MY_ENV_V4_TASK", "echo")
-BENCHMARK = os.getenv("MY_ENV_V4_BENCHMARK", "my_env_v4")
+MODEL_NAME = os.getenv("MODEL_NAME") or "openai/gpt-oss-120b:groq"
+
 MAX_STEPS = 8
 TEMPERATURE = 0.7
 MAX_TOKENS = 150
-SUCCESS_SCORE_THRESHOLD = 0.1  # normalized score in [0, 1]
 
-# Max possible reward: each token contributes 0.1, across all steps
-_MAX_REWARD_PER_STEP = MAX_TOKENS * 0.1
-MAX_TOTAL_REWARD = MAX_STEPS * _MAX_REWARD_PER_STEP
 
 SYSTEM_PROMPT = textwrap.dedent(
     """
-    You are interacting with a simple echo environment.
-    Each turn you must send a message. The environment will echo it back.
-    Reward is proportional to message length: reward = len(message) * 0.1
-    Your goal is to maximize total reward by sending meaningful, substantive messages.
-    Reply with exactly one message string — no quotes, no prefixes, just the message text.
+    You are interacting with a Hospital environment.
+    Each turn you must send a tool call. The environment return a reward and response
+    Reward is variable and depends on the tool used and the context of the request.
+    Your goal is to maximize total reward by performing correct task in small steps
+
+    The list of tools:
+        - Tool 1: get_department(conditions: str) :
+            - When to call : when the user is searching for a department given conditions
+            - `conditions` : a string describing the conditions to match ex 'chest pain, shortness of breath'; in comma separated
+        - Tool 2: get_opd_doctor(department: str) :
+            - When to call : when the user is searching for a doctor in a specific department
+            - `department` : the name of the department to search for doctors
+        - Tool 3: make_appointment(self, doctor_id: str, patient_id: str, doctor_name: str, patient_name: str) :
+            - When to call : when the user wants to schedule an appointment with a specific doctor
+            - `doctor_id` : the ID of the doctor to schedule the appointment with
+            - `patient_id` : the ID of the patient to schedule the appointment for
+            - `doctor_name` : the name of the doctor to schedule the appointment with
+            - `patient_name` : the name of the patient to schedule the appointment for
+
+    from the given tools select ONLY ONE tool in response
+
+    ***Output Response***
+        <selected_tool_with_parameters>
+        <example>
+        get_department(conditions="chest pain, shortness of breath")
+        </example>
     """
 ).strip()
 
@@ -85,11 +103,19 @@ def get_model_message(client: OpenAI, step: int, last_echoed: str, last_reward: 
         print(f"[DEBUG] Model request failed: {exc}", flush=True)
         return "hello"
 
+def parse_task():
+    import json
+    with open('task.json', 'r') as f:
+        task = json.load(f)
+    return task[0]
 
 async def main() -> None:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
-    env = await MyEnvV4Env.from_docker_image(IMAGE_NAME)
+    if IMAGE_NAME:
+        env = HospitalmanageTriageEnv.from_docker_image(IMAGE_NAME).sync()
+    else:
+        env = HospitalmanageTriageEnv().sync()
 
     history: List[str] = []
     rewards: List[float] = []
@@ -97,20 +123,24 @@ async def main() -> None:
     score = 0.0
     success = False
 
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    task = parse_task()
+
+    # log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
 
     try:
-        result = await env.reset() # OpenENV.reset()
-        last_echoed = result.observation.echoed_message
-        last_reward = 0.0
+        result = env.reset() # OpenENV.reset()
+        last_message = result.observation.result
+        last_reward = result.observation.reward
 
         for step in range(1, MAX_STEPS + 1):
-            if result.done:
+            if result.observation.done:
                 break
 
-            message = get_model_message(client, step, last_echoed, last_reward, history)
-
-            result = await env.step(MyEnvV4Action(message=message))
+            message = get_model_message(client, step, last_message, last_reward, history)
+            print(message)
+            break
+            # parse_tool_args()
+            result = env.step(CallToolAction(message=message))
             obs = result.observation
 
             reward = result.reward or 0.0
@@ -129,9 +159,9 @@ async def main() -> None:
             if done:
                 break
 
-        score = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
-        score = min(max(score, 0.0), 1.0)  # clamp to [0, 1]
-        success = score >= SUCCESS_SCORE_THRESHOLD
+        # score = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
+        # score = min(max(score, 0.0), 1.0)  # clamp to [0, 1]
+        # success = score >= SUCCESS_SCORE_THRESHOLD
 
     finally:
         try:
