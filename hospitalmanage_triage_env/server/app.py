@@ -39,7 +39,7 @@ except Exception as e:  # pragma: no cover
 try:
     from .hospitalmanage_triage_env_environment import HospitalmanageTriageEnvironment
     from ..models import HospitalmanageTriageObservation
-except ModuleNotFoundError:
+except Exception as e:
     from models import HospitalmanageTriageObservation
     from server.hospitalmanage_triage_env_environment import HospitalmanageTriageEnvironment
 
