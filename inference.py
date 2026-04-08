@@ -117,10 +117,14 @@ def run_llm_task(
     step = 0
     while not obs.done and step < 10:
         step += 1
-        action = agent.decide_action(obs)
+        try:
+            action = agent.decide_action(obs)
+        except Exception as e:
+            print(f"           -> Error getting action: {e}")
+            break
         print(f"    Step {step}: {action.tool}({json.dumps(action.parameters)})")
         obs = env.step(action)
-        print(f"           → reward={obs.reward:.4f} | {obs.message[:80]}")
+        print(f"           -> reward={obs.reward:.4f} | {obs.message[:80]}")
         # Small sleep to avoid hitting Groq rate limits
         time.sleep(0.5)
 

@@ -145,7 +145,7 @@ class GroqAgent:
                 self._conversation.append({"role": "assistant", "content": raw})
                 return action
 
-            except (json.JSONDecodeError, KeyError, ValueError) as exc:
+            except Exception as exc:
                 if self.verbose:
                     print(f"    [LLM parse error attempt {attempt}] {exc}")
                 if attempt == self.MAX_RETRIES:
