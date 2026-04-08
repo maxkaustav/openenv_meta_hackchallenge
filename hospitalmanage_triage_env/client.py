@@ -8,92 +8,17 @@
 
 from typing import Dict
 
-from openenv.core import EnvClient
-from openenv.core.client_types import StepResult
-from openenv.core.env_server.types import State
+from openenv.core.mcp_client import MCPToolClient
 
-from .models import HospitalmanageTriageAction, HospitalmanageTriageObservation
-
-
-class HospitalmanageTriageEnv(
-    EnvClient[HospitalmanageTriageAction, HospitalmanageTriageObservation, State]
-):
+class HospitalmanageTriageEnv(MCPToolClient):
     """
     Client for the Hospitalmanage Triage Env Environment.
 
-    This client maintains a persistent WebSocket connection to the environment server,
-    enabling efficient multi-step interactions with lower latency.
-    Each client instance has its own dedicated environment session on the server.
-
-    Example:
-        >>> # Connect to a running server
-        >>> with HospitalmanageTriageEnv(base_url="http://localhost:8000") as client:
-        ...     result = client.reset()
-        ...     print(result.observation.echoed_message)
-        ...
-        ...     result = client.step(HospitalmanageTriageAction(message="Hello!"))
-        ...     print(result.observation.echoed_message)
-
-    Example with Docker:
-        >>> # Automatically start container and connect
-        >>> client = HospitalmanageTriageEnv.from_docker_image("hospitalmanage_triage_env-env:latest")
-        >>> try:
-        ...     result = client.reset()
-        ...     result = client.step(HospitalmanageTriageAction(message="Test"))
-        ... finally:
-        ...     client.close()
+    Inherits all functionality from MCPToolClient:
+    - list_tools(): Discover available tools
+    - call_tool(name, **kwargs): Call a tool by name
+    - reset(**kwargs): Reset the environment
+    - step(action): Execute an action
     """
 
-    def _step_payload(self, action: HospitalmanageTriageAction) -> Dict:
-        """
-        Convert HospitalmanageTriageAction to JSON payload for step message.
-
-        Args:
-            action: HospitalmanageTriageAction instance
-
-        Returns:
-            Dictionary representation suitable for JSON encoding
-        """
-        return {
-            "message": action.message,
-        }
-
-    def _parse_result(self, payload: Dict) -> StepResult[HospitalmanageTriageObservation]:
-        """
-        Parse server response into StepResult[HospitalmanageTriageObservation].
-
-        Args:
-            payload: JSON response data from server
-
-        Returns:
-            StepResult with HospitalmanageTriageObservation
-        """
-        obs_data = payload.get("observation", {})
-        observation = HospitalmanageTriageObservation(
-            echoed_message=obs_data.get("echoed_message", ""),
-            message_length=obs_data.get("message_length", 0),
-            done=payload.get("done", False),
-            reward=payload.get("reward"),
-            metadata=obs_data.get("metadata", {}),
-        )
-
-        return StepResult(
-            observation=observation,
-            reward=payload.get("reward"),
-            done=payload.get("done", False),
-        )
-
-    def _parse_state(self, payload: Dict) -> State:
-        """
-        Parse server response into State object.
-
-        Args:
-            payload: JSON response from state request
-
-        Returns:
-            State object with episode_id and step_count
-        """
-        return State(
-            episode_id=payload.get("episode_id"),
-            step_count=payload.get("step_count", 0),
-        )
+    pass

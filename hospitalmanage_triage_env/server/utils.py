@@ -115,17 +115,22 @@ def insert_db(
     """
     Insert a single row (dict).
     """
+    keys = ", ".join(data.keys())
+    placeholders = ", ".join(["?"] * len(data))
+    values = tuple(data.values())
 
-    sql = f"INSERT INTO {tname} ({data.keys()}) VALUES ({data.values()})"
+    sql = f"INSERT INTO {table} ({keys}) VALUES ({placeholders})"
 
     if isinstance(conn_or_path, sqlite3.Connection):
         conn = conn_or_path
-        cur = conn.execute(sql)
+        cur = conn.execute(sql, values)
+        conn.commit()  # Commit the transaction
         cur.close()
         return True
     else:
         with open_connection(conn_or_path) as conn:
-            cur = conn.execute(sql)
+            cur = conn.execute(sql, values)
+            conn.commit()  # Commit the transaction
             cur.close()
             return True
     return False
@@ -143,7 +148,7 @@ def train_tfidf():
     conditions = [item["condition"] for item in __data]
     departments = [item["department"] for item in __data]
 
-    vectorizer = ()
+    vectorizer = TfidfVectorizer()
     X = vectorizer.fit_transform(conditions)
 
     return X,vectorizer,departments

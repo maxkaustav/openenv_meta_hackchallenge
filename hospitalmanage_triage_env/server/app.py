@@ -30,6 +30,7 @@ Usage:
 
 try:
     from openenv.core.env_server.http_server import create_app
+    from openenv.core.env_server.mcp_types import CallToolAction
 except Exception as e:  # pragma: no cover
     raise ImportError(
         "openenv is required for the web interface. Install dependencies with '\n    uv sync\n'"
@@ -37,16 +38,16 @@ except Exception as e:  # pragma: no cover
 
 try:
     from .hospitalmanage_triage_env_environment import HospitalmanageTriageEnvironment
-    from ..models import HospitalmanageTriageAction, HospitalmanageTriageObservation
+    from ..models import HospitalmanageTriageObservation
 except ModuleNotFoundError:
-    from models import HospitalmanageTriageAction, HospitalmanageTriageObservation
+    from models import HospitalmanageTriageObservation
     from server.hospitalmanage_triage_env_environment import HospitalmanageTriageEnvironment
 
 
 # Create the app with web interface and README integration
 app = create_app(
     HospitalmanageTriageEnvironment,
-    HospitalmanageTriageAction,
+    CallToolAction,
     HospitalmanageTriageObservation,
     env_name="hospitalmanage_triage_env",
     max_concurrent_envs=1,  # increase this number to allow more concurrent WebSocket sessions
@@ -79,6 +80,6 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=8001)
     args = parser.parse_args()
     main(port=args.port)

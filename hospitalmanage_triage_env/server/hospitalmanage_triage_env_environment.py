@@ -13,18 +13,20 @@ Perfect for testing HTTP server infrastructure.
 
 from typing import Any, Optional
 from uuid import uuid4
+import random
 
 from openenv.core.env_server.mcp_environment import MCPEnvironment
-from openenv.core.env_server.interfaces import Environment
+from openenv.core.env_server.interfaces import Action
+from openenv.core.env_server.mcp_types import CallToolAction
 from openenv.core.env_server.types import State
 from .tools import ToolSpec
 try:
-    from ..models import HospitalmanageTriageAction, HospitalmanageTriageObservation
+    from ..models import  HospitalmanageTriageObservation,HospitalState
 except ImportError:
-    from models import HospitalmanageTriageAction, HospitalmanageTriageObservation
+    from models import  HospitalmanageTriageObservation,HospitalState
 from fastmcp import FastMCP
 
-class HospitalmanageTriageEnvironment(Environment):
+class HospitalmanageTriageEnvironment(MCPEnvironment):
     """
     A simple echo environment that echoes back messages.
 
@@ -50,32 +52,44 @@ class HospitalmanageTriageEnvironment(Environment):
     def __init__(self):
         """Initialize the hospitalmanage_triage_env environment."""
 
-        # mcp = FastMCP("hospital_env")
-        # super().__init__(mcp)
-        self._state = State(episode_id=str(uuid4()), step_count=0)
+        mcp = FastMCP("hospital_env")
         self._reset_count = 0
         self.tools = ToolSpec()
+        mcp.add_tool(self.tools.get_department)
+        mcp.add_tool(self.tools.get_opd_doctor)
+        mcp.add_tool(self.tools.make_appointment)
+        mcp.add_tool(self.tools.get_appointment)
+        super().__init__(mcp)
 
 
-    def reset(self) -> HospitalmanageTriageObservation:
+    def reset(self,
+              episode_id: Optional[str] = None,
+              patient_id: Optional[int]= None,
+              tool_call_sequence: Optional[list] = [],
+              output_sequence: Optional[list] = [],
+              ) -> HospitalmanageTriageObservation:
         """
         Reset the environment.
 
         Returns:
             HospitalmanageTriageObservation with a ready message
         """
-        self._state = State(episode_id=str(uuid4()), step_count=0)
+        self._state = HospitalState(episode_id=episode_id or str(uuid4()), 
+                            step_count=0,
+                            patient_id=patient_id or random.randint(1000, 9999),
+                            tool_call_sequence=tool_call_sequence,
+                            output_sequence= output_sequence)
         self._reset_count += 1
 
         return HospitalmanageTriageObservation(
-            output_message="Hospitalmanage Triage Env environment ready!",
+            result="Hospitalmanage Triage Env environment ready!",
             done=False,
             reward=0.0,
         )
     
     def _step_impl(
         self,
-        action: HospitalmanageTriageAction,
+        action: Action,
         timeout_s: Optional[float] = None,
         **kwargs: Any,
     ) -> HospitalmanageTriageObservation:
@@ -102,7 +116,7 @@ class HospitalmanageTriageEnvironment(Environment):
             },
         )
 
-    def step(self, action: HospitalmanageTriageAction) -> HospitalmanageTriageObservation:  # type: ignore[override]
+    def step(self, action: Action, timeout_s: Optional[float] = None) -> HospitalmanageTriageObservation:  # type: ignore[override]
         """
         Execute a step in the environment by echoing the message.
 
@@ -114,22 +128,112 @@ class HospitalmanageTriageEnvironment(Environment):
         """
         self._state.step_count += 1
 
-        message = self.tools.get_doctor_tool(action.params.get("department", "general"))
-        print(f"Step {self._state.step_count}: Executing tool call - {message}")
+        if isinstance(action, CallToolAction) and action.tool_name not in dir(self.tools):
+            return HospitalmanageTriageObservation(
+                tool_name=action.tool_name,
+                done=False,
+                reward=-0.5,
+                metadata={
+                    "error": f"Unknown tool: {action.tool_name}. "
+                },
+            )
+
+        message = super().step(action, timeout_s=timeout_s)
+        # Avoid referencing an undefined CallToolResult symbol; check for a result attribute instead.
+        if hasattr(message, "result") and message.result is not None:
+            message_dict = message.result.structured_content
+            tool_called = message_dict.get("tool")
+            output_message = message_dict.get("message")
+            tool_state = message_dict.get("tool_state")
+
+        # state update
+        for key, value in tool_state.items():
+            if key != "episode_id":
+                setattr(self._state, key, value)
+        # tool reward  + add output reward
+        if self._state.tool_call_sequence[self._state.tool_state_step] == tool_called and \
+           self._state.output_sequence[self._state.tool_state_step] in output_message:
+            reward = 1.0 / len(self._state.tool_call_sequence)
+            self._state.tool_state_step += 1
+        else:
+            reward = -0.5 / len(self._state.tool_call_sequence)
+        # condition for done
+        done_tag = False
+        if self._state.tool_state_step >= len(self._state.tool_call_sequence):
+            done_tag = True
+
         return HospitalmanageTriageObservation(
-            output_message=message['department'],
-            tool_executed='get_doctor_tool',
-            done=True,
-            reward=1.0,
-            metadata={"original_message": message, "step": self._state.step_count},
+            tool_name=tool_called,
+            result=f'Patient id {self._state.patient_id} \n ' + (output_message or '<Tool Error>'),
+            tool_executed=tool_called,
+            done=done_tag,
+            reward=reward,
+            metadata={"original_message": output_message, "step": self._state.step_count},
+        )
+    
+    async def step_async(
+        self,
+        action: Action,
+        timeout_s: Optional[float] = None,
+    ) -> HospitalmanageTriageObservation:
+        """
+        Async step used by the WebSocket handler.
+
+        Increments step count then delegates to MCPEnvironment.step_async,
+        which routes MCP actions without going through run_async_safely.
+        """
+        self._state.step_count += 1
+
+        if isinstance(action, CallToolAction) and action.tool_name not in dir(self.tools):
+            return HospitalmanageTriageObservation(
+                tool_name=action.tool_name,
+                done=False,
+                reward=-0.5,
+                metadata={
+                    "error": f"Unknown tool: {action.tool_name}. "
+                },
+            )
+        
+        message =  await super().step_async(action, timeout_s=timeout_s)
+
+        if hasattr(message, "result") and message.result is not None:
+            message_dict = message.result.structured_content
+            tool_called = message_dict.get("tool")
+            output_message = message_dict.get("message")
+            tool_state = message_dict.get("tool_state")
+
+        # update state variables + think of edge cases if (if fails, if tool fails, if wrong tool called) as message changes '3 + add grading
+        for key, value in tool_state.items():
+            if key != "episode_id":
+                setattr(self._state, key, value)
+        # tool reward  + add output reward
+        if self._state.tool_call_sequence[self._state.tool_state_step] == tool_called and \
+           self._state.output_sequence[self._state.tool_state_step] in output_message:
+            reward = 1.0 / len(self._state.tool_call_sequence)
+            self._state.tool_state_step += 1
+        else:
+            reward = -0.5 / len(self._state.tool_call_sequence)
+        # condition for done
+        done_tag = False
+        if self._state.tool_state_step >= len(self._state.tool_call_sequence):
+            done_tag = True
+        
+        return HospitalmanageTriageObservation(
+            tool_name=tool_called,
+            result=f'Patient id {self._state.patient_id} \n ' + (output_message or '<Tool Error>'),
+            tool_executed=tool_called,
+            done=done_tag,
+            reward=reward,
+            metadata={"original_message": output_message, "step": self._state.step_count},
         )
 
     @property
-    def state(self) -> State:
+    def state(self) -> HospitalState:
         """
         Get the current environment state.
 
         Returns:
             Current State with episode_id and step_count
         """
+        print(self._state)
         return self._state

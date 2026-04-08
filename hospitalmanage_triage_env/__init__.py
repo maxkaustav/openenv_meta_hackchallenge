@@ -7,10 +7,11 @@
 """Hospitalmanage Triage Env Environment."""
 
 from .client import HospitalmanageTriageEnv
-from .models import HospitalmanageTriageAction, HospitalmanageTriageObservation
-
+from .models import HospitalmanageTriageObservation
+from openenv.core.env_server.mcp_types import CallToolAction, ListToolsAction
 __all__ = [
-    "HospitalmanageTriageAction",
+    "CallToolAction",
+    "ListToolsAction",
     "HospitalmanageTriageObservation",
     "HospitalmanageTriageEnv",
 ]

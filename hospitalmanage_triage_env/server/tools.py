@@ -1,5 +1,5 @@
 from typing import Dict,List, Any, Optional
-from utils import search, search_like,insert_db, find_department_tfidf
+from .utils import search, search_like,insert_db, find_department_tfidf
 from datetime import datetime
 try:
     from ..models import HospitalToolsOutput
@@ -29,7 +29,7 @@ class ToolSpec:
         def __get_doctor_wrapper(output):
             try:
                 if isinstance(output, dict):
-                    return f'The proper doctor for the patient is: {output.get("doctor_name", "<ERROR>")}'
+                    return f"The proper doctor for the patient is: {output.get('doctor_name', '<ERROR>')} with doctor ID: {output.get('doctor_id', '<ERROR>')}"
             except Exception as e:
                 return 'Error occurred while wrapping doctor.'
 
@@ -40,19 +40,19 @@ class ToolSpec:
                         where=f"department_name = ? AND is_available_opd = ? AND day_of_week = ?",
                         params=(department, True, datetime.now().strftime("%A")),
                         limit=1
-                        )
+                        )[0]
         
         return HospitalToolsOutput(tool="get_opd_doctor",
                                    message=__get_doctor_wrapper(result),
-                                   tool_state={"doctor": result.get("doctor_id")})
+                                   tool_state={"doctor_id": result.get("doctor_id")})
 
-    def make_appointment(self, doctor_id: int, patient_id: int, doctor_name: str, patient_name: str, day: datetime) -> HospitalToolsOutput:
+    def make_appointment(self, doctor_id: int, patient_id: int, doctor_name: str, patient_name: str) -> HospitalToolsOutput:
         data={
                       "doctor_id": doctor_id,
                       "patient_id": patient_id,
                       "doctor_name": doctor_name,
                       "patient_name": patient_name,
-                      "day": day}
+                      "day": datetime.now().strftime('%Y-%m-%d')}
         result = insert_db(conn_or_path="hospitalmanage_triage_env\server\hospital.db",
                   table='appointments',
                   data=data)
@@ -81,6 +81,6 @@ class ToolSpec:
                         where=where,
                         params=params,
                         limit=1
-                        )
+                        )[0]
         
         return HospitalToolsOutput(tool="get_appointment", message=__get_appointment_wrapper(result), tool_state={})
