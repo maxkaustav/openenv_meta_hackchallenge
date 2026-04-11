@@ -3,7 +3,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 
-async def main() -> None:
+def main() -> None:
     try:
         pass
 
@@ -15,4 +15,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

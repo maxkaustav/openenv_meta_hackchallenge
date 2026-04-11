@@ -8,7 +8,7 @@ load_dotenv()
 import textwrap
 from typing import List, Optional
 
-from openai import AsyncOpenAI
+from openai import OpenAI
 
 from client import HospitalmanageTriageEnv
 from openenv.core.env_server.mcp_types import CallToolAction
@@ -89,7 +89,7 @@ def build_user_prompt(step: int, last_echoed: str, last_reward: float, history: 
     ).strip()
 
 
-async def get_model_message(client: AsyncOpenAI, step: int, last_echoed: str, last_reward: float, history: List[str]) -> str:
+async def get_model_message(client: OpenAI, step: int, last_echoed: str, last_reward: float, history: List[str]) -> str:
     user_prompt = build_user_prompt(step, last_echoed, last_reward, history)
     try:
         completion = await client.chat.completions.create(
