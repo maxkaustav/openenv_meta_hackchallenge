@@ -157,7 +157,7 @@ async def main() -> None:
     if IMAGE_NAME:
         raise NotImplementedError("Use base_url with the running server instead of Docker.")
     else:
-        env = HospitalmanageTriageEnv(base_url="http://localhost:8000").sync()
+        env = HospitalmanageTriageEnv(base_url="https://Fergus2000-hospital-rl-env.hf.space").sync()
 
     history: List[str] = []
     rewards: List[float] = []
