@@ -8,7 +8,7 @@ from openai import OpenAI
 
 from client import HospitalmanageTriageEnv
 from openenv.core.env_server.mcp_types import CallToolAction
-
+import time
 
 from dotenv import load_dotenv
 
@@ -22,13 +22,13 @@ IMAGE_NAME = os.getenv("IMAGE_NAME")
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1") #OK
 MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-oss-120b:groq") #OK
 API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")  # Support both API_KEY and HF_API_KEY for flexibility
-TASK_NAME = os.getenv("TASK_NAME") or "hmt001" #OK
+TASK_NAME = os.getenv("TASK_NAME")
 BENCHMARK = os.getenv("BENCHMARK") or "hospital_manage_triage" #OK
 
 MAX_STEPS = 10
 TEMPERATURE = 0.7
 
-def main() -> None:
+def main(task_name) -> None:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     # https://stavust28-hospitalmanage-triage-env.hf.space
     env = HospitalmanageTriageEnv(base_url="https://stavust28-hospitalmanage-triage-env.hf.space").sync()
@@ -39,9 +39,9 @@ def main() -> None:
     score = 0.0
     success = False
 
-    task = parse_task(TASK_NAME)
+    task = parse_task(task_name)
 
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
+    log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
 
     try:
         result = env.reset(
@@ -233,4 +233,6 @@ def parse_task(task_name: str):
     return next((t for t in task if t["task_id"] == task_name), None)
 
 if __name__ == "__main__":
-    main()
+    for task_name in ['hmt001', 'hmt002', 'hmt003']:
+        main(task_name)
+        time.sleep(30)
