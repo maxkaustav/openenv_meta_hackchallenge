@@ -74,7 +74,7 @@ ENV ENABLE_WEB_INTERFACE=true
 
 EXPOSE 7860
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=120s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 RUN ["ls"]

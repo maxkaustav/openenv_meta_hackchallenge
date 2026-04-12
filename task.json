@@ -29,7 +29,7 @@
     {
         "task_id": "hmt003",
         "description": "Test the hospital management triage environment: Three step task -> ",
-        "query": "Hey I, Alice Smith with patient id 1003, is having head aches, and needs to see a doctor.",
+        "query": "Hey I, Alice Smith with patient id 1003, is having headache, migraine and needs to see a doctor.",
         "patient_id": 1003,
         "doctor_id": 1276,
         "doctor_name": "Dr. John Doe",

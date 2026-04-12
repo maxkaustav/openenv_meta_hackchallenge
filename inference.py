@@ -30,6 +30,7 @@ TEMPERATURE = 0.7
 
 def main() -> None:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    # https://stavust28-hospitalmanage-triage-env.hf.space
     env = HospitalmanageTriageEnv(base_url="http://localhost:8000").sync()
 
     history: List[str] = []
@@ -89,7 +90,7 @@ def main() -> None:
 
             score = sum(rewards) / len(task['expected_output']['tool_seq'])
             score = min(max(score, 0.0), 1.0)  # clamp to [0, 1]
-            success = score >= 0.5
+            success = score >= 0.5 and done
     finally:
         try:
             env.close()
