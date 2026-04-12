@@ -13,7 +13,7 @@ import time
 from dotenv import load_dotenv
 
 # Load variables from .env file into the environment
-load_dotenv(".env.example")
+# load_dotenv(".env.example")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,9 +64,9 @@ def main(task_name) -> None:
 
                 message = get_model_message(client, step, last_message, last_reward, history)
 
-                logger.info("LLM message: %s", message)
+                # logger.info("LLM message: %s", message)
                 func_name, tool_args = parse_tool_args(message)
-                logger.info("Parsed function: %s with arguments: %s", func_name, tool_args)
+                # logger.info("Parsed function: %s with arguments: %s", func_name, tool_args)
                 assert isinstance(tool_args, dict), f"Parsed tool arguments should be a dictionary, got: {tool_args}"
 
                 result = env.step(CallToolAction(tool_name=func_name, arguments=tool_args))
@@ -80,7 +80,7 @@ def main(task_name) -> None:
                 steps_taken = step
                 last_message = obs.result
                 last_reward = reward
-                logger.info("Step result: %s", last_message) #
+                # logger.info("Step result: %s", last_message) #
                 log_step(task=task_name, step=step, action=message, reward=reward, done=done, error=error)
 
                 history.append(f"Step {step}: {message!r} -> reward {reward:+.2f}")
@@ -240,6 +240,6 @@ if __name__ == "__main__":
         
     for task in tasks:
         task_id = task["task_id"]
-        print(f"Starting inference for: {task_id}")
+        # print(f"Starting inference for: {task_id}")
         main(task_id)
         time.sleep(30)
