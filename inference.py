@@ -31,7 +31,7 @@ TEMPERATURE = 0.7
 def main() -> None:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     # https://stavust28-hospitalmanage-triage-env.hf.space
-    env = HospitalmanageTriageEnv(base_url="http://localhost:8000").sync()
+    env = HospitalmanageTriageEnv(base_url="https://stavust28-hospitalmanage-triage-env.hf.space").sync()
 
     history: List[str] = []
     rewards: List[float] = []
@@ -57,7 +57,7 @@ def main() -> None:
 
             # read task json task
             last_message = task['query']
-            logger.info(f"Task query: {last_message}")
+            # logger.info(f"Task query: {last_message}")
             for step in range(1, MAX_STEPS + 1):
                 if result.observation.done:
                     break
