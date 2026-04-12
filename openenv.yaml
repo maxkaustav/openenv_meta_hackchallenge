@@ -1,0 +1,34 @@
+spec_version: 1.2
+name: hospitalmanage_triage_env
+type: space
+runtime: fastapi
+app: hospitalmanage_triage_env.server.app:app
+port: 8000
+
+tasks:
+  - id: hmt001
+    difficulty: easy
+    description: Test the hospital management triage environment = One step task -> Just make an appointment
+    max_steps: 150
+    score_range: [0.01, 0.99]
+    grader:
+      function: hospitalmanage_triage_env.server.graders.easy_grader
+      task_length: 1
+
+  - id: hmt002
+    difficulty: medium
+    description: Test the hospital management triage environment =  Two step task -> Get the proper doctor for the patient and then make an appointment
+    max_steps: 150
+    score_range: [0.01, 0.99]
+    grader:
+      function: hospitalmanage_triage_env.server.graders.medium_grader
+      task_length: 2
+
+  - id: hmt003
+    difficulty: hard
+    description: Test the hospital management triage environment =  Three step task -> Get the proper doctor for the patient, make an appointment, and then check the appointment details
+    max_steps: 150
+    score_range: [0.01, 0.99]
+    grader:
+      function: hospitalmanage_triage_env.server.graders.hard_grader
+      task_length: 3
