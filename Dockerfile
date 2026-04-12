@@ -17,7 +17,7 @@ WORKDIR /app
 
 # ── System dependencies ────────────────────────────────────────────────────
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl && \
+    apt-get install -y --no-install-recommends git curl sqlite3 && \
     rm -rf /var/lib/apt/lists/*
 
 # Build argument to control whether we're building standalone or in-repo
@@ -54,6 +54,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --no-editable; \
     fi
 
+RUN sqlite3 server/hospital.db < server/hospital.sql 
+
 # Final runtime stage
 FROM ${BASE_IMAGE}
 
@@ -77,7 +79,11 @@ EXPOSE 7860
 HEALTHCHECK --interval=120s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-RUN ["ls"]
+RUN ["ls","/app/env/server"]
+
 RUN ["ls", "/app/env"]
+
+# RUN ["python", "-m", "server.hospital_db_test"]
+
 # Default command: start the FastAPI server
 CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 8000"]

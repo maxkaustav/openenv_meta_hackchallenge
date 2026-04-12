@@ -19,11 +19,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 IMAGE_NAME = os.getenv("IMAGE_NAME")
-API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-oss-120b:groq")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1") #OK
+MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-oss-120b:groq") #OK
 API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN")  # Support both API_KEY and HF_API_KEY for flexibility
-TASK_NAME = os.getenv("TASK_NAME") or "hmt003"
-BENCHMARK = os.getenv("BENCHMARK") or "hospital_manage_triage"
+TASK_NAME = os.getenv("TASK_NAME") or "hmt003" #OK
+BENCHMARK = os.getenv("BENCHMARK") or "hospital_manage_triage" #OK
 
 MAX_STEPS = 10
 TEMPERATURE = 0.7
