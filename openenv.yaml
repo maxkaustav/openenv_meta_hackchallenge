@@ -12,7 +12,9 @@ tasks:
     max_steps: 150
     score_range: [0.01, 0.99]
     task_length: 1
-    grader: graders.easy_grader:EasyGrader
+    grader:
+      type: llm
+      prompt_template: "Score the agent performance 0.0 to 1.0 based on the trajectory..."
 
   - id: hmtmedium
     difficulty: medium
@@ -20,7 +22,9 @@ tasks:
     max_steps: 150
     score_range: [0.01, 0.99]
     task_length: 2
-    grader: graders.medium_grader:MediumGrader
+    grader:
+      type: llm
+      prompt_template: "Score the agent performance 0.0 to 1.0 based on the trajectory..."
 
   - id: hmthard
     difficulty: hard
@@ -28,4 +32,6 @@ tasks:
     max_steps: 150
     score_range: [0.01, 0.99]
     task_length: 3
-    grader: graders.hard_grader:HardGrader
+    grader:
+      type: llm
+      prompt_template: "Score the agent performance 0.0 to 1.0 based on the trajectory..."
